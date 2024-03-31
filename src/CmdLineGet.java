@@ -5,10 +5,13 @@
 // It should work with your submission without any changes.
 // This should make your testing easier.
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+
 // DO NOT EDIT starts
 public class CmdLineGet {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length != 3) {
             System.err.println("Usage error!");
             System.err.println("DSTGetCmdLine startingNodeName startingNodeAddress key");
