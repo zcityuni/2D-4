@@ -12,7 +12,7 @@ import java.net.*;
 // DO NOT EDIT starts
 interface TemporaryNodeInterface {
     public boolean start(String startingNodeName, String startingNodeAddress) throws IOException;
-    public boolean store(String key, String value);
+    public boolean store(String key, String value) throws IOException;
     public String get(String key) throws IOException;
 }
 // DO NOT EDIT ends
@@ -49,9 +49,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             String myNode = "zakariyya.chawdhury@city.ac.uk:TempNodeZ123";
             writer.write("START 1 " + myNode + "\n");
             writer.flush();
-            //clientSocket.close();
             return true;
-
         } catch (SocketException e){
             System.out.println(e.toString());
             end("START failed");
@@ -59,11 +57,23 @@ public class TemporaryNode implements TemporaryNodeInterface {
         }
     }
 
-    public boolean store(String key, String value) {
+    public boolean store(String key, String value) throws IOException {
 	// Implement this!
 	// Return true if the store worked
 	// Return false if the store failed
-	return true;
+        try{
+            Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            System.out.println("Sending a PUT message to the server");
+            int keyLength = key.length();
+            int valLength = value.length();
+            writer.write("PUT?  " + keyLength + " " + valLength + "\n");
+            writer.flush();
+            return true;
+        } catch(IOException e){
+            System.out.println(e.toString());
+            end("PUT failed");
+            return false;
+        }
     }
 
     public String get(String key) throws IOException {
@@ -75,7 +85,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             System.out.println("Sending a GET message to the server");
             int keyLength = key.length();
             String[] keyLine = key.split(" ");
-            writer.write("GET " + keyLength + " " + "\n");
+            writer.write("GET? " + keyLength + " " + "\n");
             for(int i = 0; i < keyLength; i++){
                 writer.write(keyLine + "\n");
             }
@@ -103,17 +113,15 @@ public class TemporaryNode implements TemporaryNodeInterface {
         }
     }
 
-    public String end(String reason) throws IOException {
+    public void end(String reason) throws IOException {
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             writer.write("END " + reason + "\n");
             String message = writer.toString();
             writer.flush();
             clientSocket.close();
-            return message;
         } catch(IOException e){
             System.out.println(e.toString());
-            return null;
         }
     }
 }
