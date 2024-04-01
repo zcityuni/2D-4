@@ -7,49 +7,55 @@
 // zakariyya.chawdhury@city.ac.uk
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.ServerSocket;
-import java.net.UnknownHostException;
+import java.net.*;
 
 // DO NOT EDIT starts
 interface TemporaryNodeInterface {
     public boolean start(String startingNodeName, String startingNodeAddress) throws IOException;
     public boolean store(String key, String value);
-    public String get(String key);
+    public String get(String key) throws IOException;
 }
 // DO NOT EDIT ends
 
 
 public class TemporaryNode implements TemporaryNodeInterface {
-    // martin.brain@city.ac.uk:MyCoolImplementation,1.41,test-node-2
-    public boolean start(String startingNodeName, String startingNodeAddress) throws IOException {
-        String[] name_parts = startingNodeName.split(":");
-        String[] address_parts = startingNodeAddress.split(":");
+    String port;
+    InetAddress host;
+    Socket clientSocket;
 
-        String IPAddressString = address_parts[0];
-        String port = address_parts[1];
+    public TemporaryNode() throws IOException {
+    }
+
+    public boolean start(String startingNodeName, String startingNodeAddress) throws IOException {
+
+        // These are the details of the node we are connecting to
+        String[] fullnodeName = startingNodeName.split(":");
+        String[] fullnodeAddr = startingNodeAddress.split(":");
+
+        String IPAddressString = fullnodeAddr[0];
+        port = fullnodeAddr[1];
         InetAddress host = InetAddress.getByName(IPAddressString);
 
-        System.out.println("TCPClient connecting to " + host.toString() + ":" + port);
-        Socket clientSocket = new Socket(host, Integer.parseInt(port));
+        try{
+            System.out.println("TCPClient connecting to " + host.toString() + ":" + port);
+            clientSocket = new Socket(host, Integer.parseInt(port));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            String response = reader.readLine();
+            System.out.println(fullnodeName[0] + " says: " + response); // This will print out the fullnodes start message to us
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            // Send the full node our start message
+            Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            System.out.println("Sending a START message to the server");
+            String myNode = "zakariyya.chawdhury@city.ac.uk:TempNodeZ123";
+            writer.write("START 1 " + myNode);
+            writer.flush();
+            //clientSocket.close();
+            return true;
 
-        System.out.println("Sending a message to the server");
-        String version = "TempNodeZ123";
-        String sender = "zakariyya.chawdhury@city.ac.uk";
-        writer.write("START 1" + sender + ":" + version);
-        writer.flush();
-
-        // We can read what the server has said
-        String response = reader.readLine();
-        System.out.println("The server said : " + response);
-
-        // Close down the connection
-        clientSocket.close();
-	return true;
+        } catch (SocketException e){
+            System.out.println(e.toString());
+            return false;
+        }
     }
 
     public boolean store(String key, String value) {
@@ -59,10 +65,22 @@ public class TemporaryNode implements TemporaryNodeInterface {
 	return true;
     }
 
-    public String get(String key) {
+    public String get(String key) throws IOException {
 	// Implement this!
 	// Return the string if the get worked
 	// Return null if it didn't
-	return "Not implemented";
+        try{
+            Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            System.out.println("Sending a GET message to the server");
+            int keyLength = key.length();
+            writer.write("GET " + keyLength + " " + key);
+            String message = writer.toString();
+            writer.flush();
+            return message;
+        } catch(IOException e){
+            System.out.println(e.toString());
+            clientSocket.close();
+            return null;
+        }
     }
 }
