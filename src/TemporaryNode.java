@@ -47,13 +47,14 @@ public class TemporaryNode implements TemporaryNodeInterface {
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("Sending a START message to the server");
             String myNode = "zakariyya.chawdhury@city.ac.uk:TempNodeZ123";
-            writer.write("START 1 " + myNode);
+            writer.write("START 1 " + myNode + "\n");
             writer.flush();
             //clientSocket.close();
             return true;
 
         } catch (SocketException e){
             System.out.println(e.toString());
+            end("START failed");
             return false;
         }
     }
@@ -73,13 +74,45 @@ public class TemporaryNode implements TemporaryNodeInterface {
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("Sending a GET message to the server");
             int keyLength = key.length();
-            writer.write("GET " + keyLength + " " + key);
+            String[] keyLine = key.split(" ");
+            writer.write("GET " + keyLength + " " + "\n");
+            for(int i = 0; i < keyLength; i++){
+                writer.write(keyLine + "\n");
+            }
             String message = writer.toString();
             writer.flush();
             return message;
         } catch(IOException e){
             System.out.println(e.toString());
+            end("GET failed");
+            return null;
+        }
+    }
+
+    public boolean echo() throws IOException {
+        try{
+            Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            System.out.println("Sending an ECHO message to the server");
+            writer.write("ECHO?\n");
+            writer.flush();
+            return true;
+        } catch(IOException e){
+            System.out.println(e.toString());
+            end("ECHO failed");
+            return false;
+        }
+    }
+
+    public String end(String reason) throws IOException {
+        try{
+            Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            writer.write("END " + reason + "\n");
+            String message = writer.toString();
+            writer.flush();
             clientSocket.close();
+            return message;
+        } catch(IOException e){
+            System.out.println(e.toString());
             return null;
         }
     }
