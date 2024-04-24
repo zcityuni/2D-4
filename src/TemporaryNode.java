@@ -82,16 +82,40 @@ public class TemporaryNode implements TemporaryNodeInterface {
 	// Return null if it didn't
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("Sending a GET message to the server");
             int keyLength = key.length();
-            String[] keyLine = key.split(" ");
-            writer.write("GET? " + keyLength + " " + "\n");
-            for(int i = 0; i < keyLength; i++){
-                writer.write(keyLine + "\n");
+
+            if(keyLength >= 1){
+                System.out.println("Sending a GET message to the server");
+                String[] keyLine = key.split(" ");
+                writer.write("GET? " + keyLength  + "\n"); // First part of GET
+                for(int i = 0; i < keyLength; i++){ // Each line of the key
+                    writer.write(keyLine + "\n");
+                }
+                String message = writer.toString();
+                System.out.println(message);
+                writer.flush();
+
+                // Handling the response
+                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                if(reader.readLine().equals("NOPE")){
+                    System.out.println("Value not found at this full node");
+                    // Handle NEAREST?
+                    // nearest();
+                    return "NOPE";
+                }
+                // If the response is valid
+                StringBuilder response = new StringBuilder();
+                String line;
+                while((line = reader.readLine()) != null){
+                    response.append(line);
+                }
+                System.out.println(response.toString());
+                return response.toString();
+
+            } else{ // If key length is less than 1
+                end("GET KeyLength error");
+                throw new IOException("Key length must be at least 1");
             }
-            String message = writer.toString();
-            writer.flush();
-            return message;
         } catch(IOException e){
             System.out.println(e.toString());
             end("GET failed");
