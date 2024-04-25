@@ -8,6 +8,7 @@
 
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 
 // DO NOT EDIT starts
 interface TemporaryNodeInterface {
@@ -21,6 +22,7 @@ interface TemporaryNodeInterface {
 public class TemporaryNode implements TemporaryNodeInterface {
     String port;
     InetAddress host;
+    String name;
     Socket clientSocket;
 
     public TemporaryNode() throws IOException {
@@ -29,6 +31,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
     public boolean start(String startingNodeName, String startingNodeAddress) throws IOException {
 
         // These are the details of the node we are connecting to
+        name = startingNodeName;
         String[] fullnodeName = startingNodeName.split(":");
         String[] fullnodeAddr = startingNodeAddress.split(":");
 
@@ -37,7 +40,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
         InetAddress host = InetAddress.getByName(IPAddressString);
 
         try{
-            System.out.println("TCPClient connecting to " + host.toString() + ":" + port);
+            System.out.println("\nTCPClient connecting to " + host.toString() + ":" + port + "\n");
             clientSocket = new Socket(host, Integer.parseInt(port));
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
@@ -45,7 +48,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
             // Send the full node our start message
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("Sending a START message to the server");
+            System.out.println("\nSending a START message to the server...\n");
             String myNode = "zakariyya.chawdhury@city.ac.uk:TempNodeZ123";
             writer.write("START 1 " + myNode + "\n");
             writer.flush();
@@ -63,7 +66,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 	// Return false if the store failed
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("Sending a PUT message to the server");
+            System.out.println("\nSending a PUT message to the server...\n");
             int keyLength = key.length();
             int valLength = value.length();
             writer.write("PUT?  " + keyLength + " " + valLength + "\n");
@@ -85,7 +88,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             int keyLength = key.length();
 
             if(keyLength >= 1){
-                System.out.println("Sending a GET message to the server");
+                System.out.println("\nSending a GET message to the server...\n");
                 String[] keyLine = key.split(" ");
                 writer.write("GET? " + keyLength  + "\n"); // First part of GET
                 for(int i = 0; i < keyLength; i++){ // Each line of the key
@@ -95,38 +98,60 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 System.out.println(message);
                 writer.flush();
 
-                // Handling the response
+                // Handling the response if NOPE
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 if(reader.readLine().equals("NOPE")){
-                    System.out.println("Value not found at this full node");
-                    // Handle NEAREST?
-                    // nearest();
+                    System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
+                    String nodeHashID = hash(name);
+                    writer.write("NEAREST? " + nodeHashID);
+                    writer.flush();
+
+                    // Read the response from nearest command which should have list of nodes
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while((line = reader.readLine()) != null){
+                        response.append(line);
+                    }
+                    System.out.println(response.toString());
+                    // implement for loop to ask GET for each of those returned nodes
                     return "NOPE";
                 }
-                // If the response is valid
-                StringBuilder response = new StringBuilder();
-                String line;
-                while((line = reader.readLine()) != null){
-                    response.append(line);
+                else{
+                    // the response is valid
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while((line = reader.readLine()) != null){
+                        response.append(line);
+                    }
+                    System.out.println(response.toString());
+                    return response.toString();
                 }
-                System.out.println(response.toString());
-                return response.toString();
 
             } else{ // If key length is less than 1
                 end("GET KeyLength error");
                 throw new IOException("Key length must be at least 1");
             }
+
         } catch(IOException e){
             System.out.println(e.toString());
             end("GET failed");
             return null;
+        } catch (Exception e) {
+            end("HASHING ID FAILED");
+            throw new RuntimeException(e);
         }
+    }
+
+    public String hash(String nodeName) throws Exception {
+        String convert = Arrays.toString(HashID.computeHashID(nodeName));
+        System.out.println(convert);
+        return convert;
     }
 
     public boolean echo() throws IOException {
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("Sending an ECHO message to the server");
+            System.out.println("\nSending an ECHO message to the server...\n");
             writer.write("ECHO?\n");
             writer.flush();
             return true;
