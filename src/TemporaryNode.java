@@ -108,10 +108,14 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     writer.flush();
                     System.out.println("\n NEAREST message sent!\n");
                     // Read the response from nearest command which should have list of nodes
+
                     StringBuilder response = new StringBuilder();
                     String line;
+                    int i = 0;
                     while((line = reader.readLine()) != null){
+                        System.out.println(i);
                         response.append(line);
+                        i++;
                     }
                     System.out.println(response.toString());
                     // implement for loop to ask GET for each of those returned nodes
