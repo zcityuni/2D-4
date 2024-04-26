@@ -92,21 +92,16 @@ public class TemporaryNode implements TemporaryNodeInterface {
             if(keyLength >= 1){
                 System.out.println("\nSending a GET message to the server...\n");
                 String[] keyLine = key.split(" ");
-                StringBuilder GETresponse = new StringBuilder();
                 writer.write("GET? " + keyLength  + "\n"); // First part of GET
-                GETresponse.append(writer.toString());
                 for(int i = 0; i < keyLength; i++){ // Each line of the key
                     writer.write(keyLine + "\n");
-                    GETresponse.append(writer.toString());
                 }
-                System.out.println(GETresponse.toString());
                 System.out.println("\n GET message sent!\n");
                 writer.flush();
 
                 // Handling the response if NOPE
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 if(reader.readLine().equals("NOPE")){
-                    System.out.println("\n Server said: " + reader.readLine() + "\n");
                     System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID);
