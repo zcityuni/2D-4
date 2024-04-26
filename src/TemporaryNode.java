@@ -104,7 +104,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 if(reader.readLine().equals("NOPE")){
                     System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
                     String nodeHashID = hash(name);
-                    writer.write("NEAREST? " + nodeHashID);
+                    writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
                     System.out.println("\n NEAREST message sent!\n");
                     // Read the response from nearest command which should have list of nodes
@@ -149,7 +149,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
     }
 
     public String hash(String nodeName) throws Exception {
-        String convert = ((HashID.computeHashID(nodeName + "\n")).toString());
+        String convert = HashID.computeHashID(nodeName + "\n").toString();
         System.out.println(convert);
         return convert;
     }
