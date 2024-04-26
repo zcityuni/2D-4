@@ -45,14 +45,12 @@ public class TemporaryNode implements TemporaryNodeInterface {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
             System.out.println(fullnodeName[0] + " says: " + response); // This will print out the fullnodes start message to us
-            System.out.println("\n Connection Established\n");
 
             // Send the full node our start message
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("\nSending a START message to the server...\n");
             String myNode = "zakariyya.chawdhury@city.ac.uk:TempNodeZ123";
             writer.write("START 1 " + myNode + "\n");
-            System.out.println("\n START message sent!\n");
             writer.flush();
             return true;
         } catch (SocketException e){
@@ -73,7 +71,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
             int valLength = value.length();
             writer.write("PUT?  " + keyLength + " " + valLength + "\n");
             writer.flush();
-            System.out.println("\n PUT message sent!\n");
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
@@ -93,26 +90,22 @@ public class TemporaryNode implements TemporaryNodeInterface {
             if(keyLength >= 1){
                 System.out.println("\nSending a GET message to the server...\n");
                 String[] keyLine = key.split(" ");
-                StringBuilder GETresponse = new StringBuilder();
                 writer.write("GET? " + keyLength  + "\n"); // First part of GET
-                System.out.println("\n GET message sent!\n");
-                GETresponse.append("GET? " + keyLength  + "\n");
                 for(int i = 0; i < keyLength; i++){ // Each line of the key
                     writer.write(keyLine + "\n");
-                    GETresponse.append(writer.toString());
                 }
-                System.out.println(GETresponse.toString());
+                String message = writer.toString();
+                System.out.println(message);
                 writer.flush();
 
                 // Handling the response if NOPE
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                System.out.println("Server says: " + reader.readLine());
                 if(reader.readLine().equals("NOPE")){
                     System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID);
                     writer.flush();
-                    System.out.println("\n NEAREST message sent!\n");
+
                     // Read the response from nearest command which should have list of nodes
                     StringBuilder response = new StringBuilder();
                     String line;
@@ -125,7 +118,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 }
                 else{
                     // the response is valid
-                    System.out.println("\nRESPONSE VALID ITEM FOUND!\n");
                     StringBuilder response = new StringBuilder();
                     String line;
                     while((line = reader.readLine()) != null){
@@ -151,7 +143,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
     }
 
     public String hash(String nodeName) throws Exception {
-        String convert = Arrays.toString(HashID.computeHashID(nodeName + "\n"));
+        String convert = Arrays.toString(HashID.computeHashID(nodeName));
         System.out.println(convert);
         return convert;
     }
