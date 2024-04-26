@@ -118,6 +118,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 }
                 else{
                     // the response is valid
+                    System.out.println("\n RESPONSE VALID!\n");
                     StringBuilder response = new StringBuilder();
                     String line;
                     while((line = reader.readLine()) != null){
