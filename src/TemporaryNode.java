@@ -145,7 +145,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
     }
 
     public String hash(String nodeName) throws Exception {
-        String convert = Arrays.toString(HashID.computeHashID(nodeName + "\n"));
+        String convert = ((HashID.computeHashID(nodeName + "\n")).toString());
         System.out.println(convert);
         return convert;
     }
