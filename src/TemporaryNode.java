@@ -45,8 +45,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
             clientSocket = new Socket(host, Integer.parseInt(port));
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
-            System.out.println(fullnodeName[0] + " says: " + response); // This will print out the fullnodes start message to us
-            System.out.println("\n Connection established!\n");
+            System.out.println(fullnodeName[0] + " replied: " + response); // This will print out the fullnodes start message to us
+            System.out.println("\nConnection established!\n");
             // Send the full node our start message
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("\nSending a START message to the server...\n");
@@ -54,7 +54,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             writer.write("START 1 " + myNode + "\n");
             writer.flush();
             System.out.println("Sending Message:\nSTART 1 " + myNode + "\n");
-            System.out.println("\n START message sent!\n");
+            System.out.println("\nSTART message sent!\n");
             return true;
         } catch (SocketException e){
             System.out.println(e.toString());
@@ -74,7 +74,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             int valLength = value.length();
             writer.write("PUT?  " + keyLength + " " + valLength + "\n");
             writer.flush();
-            System.out.println("\n PUT message sent!\n");
+            System.out.println("\nPUT message sent!\n");
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
@@ -96,13 +96,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
             if (numLines >= 1) {
                 String message = "GET? " + numLines + "\n";
                 for (String line : keyLines) {
-                    message += line + "\n";
+                    message += line;
                 }
                 System.out.println("Sending message:\n" + message);
                 writer.write(message);
-                System.out.println("\n GET message sent!\n");
+                System.out.println("\nGET message sent!\n");
                 writer.flush();
-                System.out.println("\n Waiting for server response...\n");
+                System.out.println("\nWaiting for server response...\n");
 
                 // Handling the response if NOPE
                 String serverResponse = reader.readLine();
@@ -112,8 +112,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
-                    System.out.println("\n NEAREST message sent!\n");
                     System.out.println("NEAREST? " + nodeHashID + "\n");
+                    System.out.println("\nNEAREST message sent!\n");
 
                     // Read and print out the response from nearest command which should have list of nodes
                     System.out.println("Server replied:");
