@@ -120,6 +120,14 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String responseLine;
                     while ((responseLine = reader.readLine()) != null) {
                         System.out.println(responseLine);
+                        if (responseLine.startsWith("NODES")) {
+                            continue;
+                        }
+                        String[] parts = responseLine.split(",");
+                        String name = parts[0];
+                        String ipAddress = parts[1];
+                        System.out.println("Name: " + name);
+                        System.out.println("IP Address: " + ipAddress);
                     }
                     // implement for loop to ask GET for each of those returned nodes
                     return "NOPE";
