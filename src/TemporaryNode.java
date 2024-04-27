@@ -116,17 +116,12 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     System.out.println("NEAREST? " + nodeHashID + "\n");
 
                     // Read and print out the response from nearest command which should have list of nodes
-                    String response = reader.readLine();
-                    System.out.println("Server replied: " + response);
-                    /*
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line).append("\n");
+                    System.out.println("Server replied:");
+                    String responseLine;
+                    while ((responseLine = reader.readLine()) != null) {
+                        System.out.println(responseLine);
                     }
-                    System.out.println(response.toString());*/
                     // implement for loop to ask GET for each of those returned nodes
-
                     return "NOPE";
                 } else{
                     // the response is valid
