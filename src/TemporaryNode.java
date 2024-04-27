@@ -105,6 +105,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 System.out.println("\nWaiting for server response...\n");
 
                 // Handling the response if NOPE
+                System.out.println("Server says: " + reader.readLine());
                 String serverResponse = reader.readLine();
                 System.out.println("Server says: " + serverResponse);
                 if (serverResponse.equals("NOPE")) {
