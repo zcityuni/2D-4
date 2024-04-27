@@ -106,7 +106,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
                 // Handling the response if NOPE
                 String serverResponse = reader.readLine();
-                System.out.println("Server says: " + reader.readLine());
+                System.out.println("Server says: " + serverResponse);
                 if (serverResponse.equals("NOPE")) {
                     System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
                     String nodeHashID = hash(name);
