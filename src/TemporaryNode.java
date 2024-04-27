@@ -7,6 +7,7 @@
 // zakariyya.chawdhury@city.ac.uk
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.*;
 import java.util.Arrays;
 
@@ -87,14 +88,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
 	// Return null if it didn't
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            int keyLength = key.length();
+            String[] keyLines = key.split("\\n");
+            int numLines = keyLines.length;
 
-            if(keyLength >= 1){
-                System.out.println("\nSending a GET message to the server...\n");
-                String[] keyLine = key.split(" ");
-                writer.write("GET? " + keyLength  + "\n"); // First part of GET
-                for(int i = 0; i < keyLength; i++){ // Each line of the key
-                    writer.write(keyLine + "\n");
+            if(numLines >= 1){
+                writer.write("GET? " + numLines + "\n");
+                for (String line : keyLines) {
+                    writer.write(line + "\n");
                 }
                 System.out.println("\n GET message sent!\n");
                 writer.flush();
@@ -107,35 +107,34 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
                     System.out.println("\n NEAREST message sent!\n");
-                    // Read the response from nearest command which should have list of nodes
 
+                    // Read and print out the response from nearest command which should have list of nodes
                     StringBuilder response = new StringBuilder();
                     String line;
-                    int i = 0;
-                    while((line = reader.readLine()) != null){
-                        System.out.println(i);
-                        response.append(line);
-                        i++;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line).append("\n");
                     }
                     System.out.println(response.toString());
                     // implement for loop to ask GET for each of those returned nodes
+
                     return "NOPE";
                 }
                 else{
                     // the response is valid
                     System.out.println("\n RESPONSE VALID!\n");
+                    // print out the response (the value stored for that key)
                     StringBuilder response = new StringBuilder();
                     String line;
-                    while((line = reader.readLine()) != null){
-                        response.append(line);
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line).append("\n");
                     }
                     System.out.println(response.toString());
                     return response.toString();
                 }
 
-            } else{ // If key length is less than 1
-                end("GET KeyLength error");
-                throw new IOException("Key length must be at least 1");
+            } else{ // If numLines is less than 1
+                end("GET numLines error");
+                throw new IOException("Number of lines must be at least 1");
             }
 
         } catch(IOException e){
@@ -149,10 +148,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
     }
 
     public String hash(String nodeName) throws Exception {
-        byte[] convert = HashID.computeHashID(nodeName + "\n");
-        String bytesToString = new String(convert);
-        System.out.println(bytesToString);
-        return bytesToString;
+        byte[] hashBytes = HashID.computeHashID(nodeName + "\n");
+        BigInteger hashBigInt = new BigInteger(1, hashBytes);
+        String hexString = hashBigInt.toString(16);
+        while (hexString.length() < 64) {
+            hexString = "0" + hexString;
+        }
+        return hexString;
     }
 
     public boolean echo() throws IOException {
