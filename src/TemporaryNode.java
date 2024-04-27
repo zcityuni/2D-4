@@ -113,7 +113,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
                     System.out.println("\n NEAREST message sent!\n");
-                    System.out.println("NEAREST?" + nodeHashID + "\n");
+                    System.out.println("NEAREST? " + nodeHashID + "\n");
 
                     // Read and print out the response from nearest command which should have list of nodes
                     StringBuilder response = new StringBuilder();
