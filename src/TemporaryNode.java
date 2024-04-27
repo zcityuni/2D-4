@@ -92,13 +92,16 @@ public class TemporaryNode implements TemporaryNodeInterface {
             String[] keyLines = key.split("\\n");
             int numLines = keyLines.length;
 
-            if(numLines >= 1){
-                writer.write("GET? " + numLines + "\n");
+            if (numLines >= 1) {
+                String message = "GET? " + numLines + "\n";
                 for (String line : keyLines) {
-                    writer.write(line + "\n");
+                    message += line + "\n";
                 }
-                System.out.println("\n GET message sent!\n");
+                System.out.println("Sending message:\n" + message);
+                writer.write(message);
+                System.out.println("\nGET message sent!\n");
                 writer.flush();
+                System.out.println("\nWaiting for server response...\n");
 
                 // Handling the response if NOPE
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -121,8 +124,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     // implement for loop to ask GET for each of those returned nodes
 
                     return "NOPE";
-                }
-                else{
+                } else{
                     // the response is valid
                     System.out.println("\n RESPONSE VALID!\n");
                     // print out the response (the value stored for that key)
