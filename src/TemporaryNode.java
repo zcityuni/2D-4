@@ -53,8 +53,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
             String myNode = "addf081@city.ac.uk:TempNodeZ123";
             writer.write("START 1 " + myNode + "\n");
             writer.flush();
+            System.out.println("Sending Message:\nSTART 1 " + myNode + "\n");
             System.out.println("\n START message sent!\n");
-            System.out.println("START 1 " + myNode + "\n");
             return true;
         } catch (SocketException e){
             System.out.println(e.toString());
@@ -155,12 +155,15 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
     public String hash(String nodeName) throws Exception {
         byte[] hashBytes = HashID.computeHashID(nodeName + "\n");
-        BigInteger hashBigInt = new BigInteger(1, hashBytes);
-        String hexString = hashBigInt.toString(16);
-        while (hexString.length() < 64) {
-            hexString = "0" + hexString;
+        StringBuilder convert = new StringBuilder();
+        for(byte b: hashBytes){
+            String hex = Integer.toHexString(0xff & b);
+            if(hex.length() == 1){
+                convert.append("0");
+            }
+            convert.append(hex);
         }
-        return hexString;
+        return convert.toString();
     }
 
     public boolean echo() throws IOException {
