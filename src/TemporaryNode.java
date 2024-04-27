@@ -50,10 +50,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
             // Send the full node our start message
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("\nSending a START message to the server...\n");
-            String myNode = "zakariyya.chawdhury@city.ac.uk:TempNodeZ123";
+            String myNode = "addf081@city.ac.uk:TempNodeZ123";
             writer.write("START 1 " + myNode + "\n");
             writer.flush();
             System.out.println("\n START message sent!\n");
+            System.out.println("START 1 " + myNode + "\n");
             return true;
         } catch (SocketException e){
             System.out.println(e.toString());
@@ -102,11 +103,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 // Handling the response if NOPE
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 if(reader.readLine().equals("NOPE")){
+                    System.out.println("Server says: " + reader.readLine());
                     System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
                     System.out.println("\n NEAREST message sent!\n");
+                    System.out.println("NEAREST?" + nodeHashID + "\n");
 
                     // Read and print out the response from nearest command which should have list of nodes
                     StringBuilder response = new StringBuilder();
