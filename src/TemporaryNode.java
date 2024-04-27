@@ -149,9 +149,10 @@ public class TemporaryNode implements TemporaryNodeInterface {
     }
 
     public String hash(String nodeName) throws Exception {
-        String convert = HashID.computeHashID(nodeName + "\n").toString();
-        System.out.println(convert);
-        return convert;
+        byte[] convert = HashID.computeHashID(nodeName + "\n");
+        String bytesToString = new String(convert);
+        System.out.println(bytesToString);
+        return bytesToString;
     }
 
     public boolean echo() throws IOException {
