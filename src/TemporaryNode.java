@@ -89,6 +89,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 	// Return null if it didn't
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String[] keyLines = key.split("\\n");
             int numLines = keyLines.length;
 
@@ -99,13 +100,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 }
                 System.out.println("Sending message:\n" + message);
                 writer.write(message);
-                System.out.println("\nGET message sent!\n");
+                System.out.println("\n GET message sent!\n");
                 writer.flush();
-                System.out.println("\nWaiting for server response...\n");
+                System.out.println("\n Waiting for server response...\n");
 
                 // Handling the response if NOPE
-                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                if(reader.readLine().equals("NOPE")){
+                String serverResponse = reader.readLine();
+                if (serverResponse.equals("NOPE")) {
                     System.out.println("Server says: " + reader.readLine());
                     System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
                     String nodeHashID = hash(name);
