@@ -21,4 +21,23 @@ public class HashID {
 	    throw new Exception("No new line at the end of input to HashID");
 	}
     }
+
+	public static String hash(String nodeName) throws Exception {
+		byte[] hashBytes = HashID.computeHashID(nodeName + "\n");
+		StringBuilder convert = new StringBuilder();
+		for(byte b: hashBytes){
+			String hex = Integer.toHexString(0xff & b);
+			if(hex.length() == 1){
+				convert.append("0");
+			}
+			convert.append(hex);
+		}
+		return convert.toString();
+	}
+
+	public static void main(String[] args) throws Exception {
+		String name = "martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000";
+		String hashed = hash(name);
+		System.out.println(hashed);
+	}
 }
