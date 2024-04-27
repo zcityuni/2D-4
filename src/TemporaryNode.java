@@ -41,7 +41,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
         InetAddress host = InetAddress.getByName(IPAddressString);
 
         try{
-            System.out.println("\nTCPClient connecting to " + host.toString() + ":" + port + "\n");
+            System.out.println("\nTCPClient connecting to " + host.toString() + ":" + port + "\n" + name + "\n");
             clientSocket = new Socket(host, Integer.parseInt(port));
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
