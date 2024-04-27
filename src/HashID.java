@@ -22,7 +22,7 @@ public class HashID {
 	}
     }
 
-	public static String hash(String nodeName) throws Exception {
+	/*public static String hash(String nodeName) throws Exception {
 		byte[] hashBytes = HashID.computeHashID(nodeName + "\n");
 		StringBuilder convert = new StringBuilder();
 		for(byte b: hashBytes){
@@ -39,5 +39,5 @@ public class HashID {
 		String name = "martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000";
 		String hashed = hash(name);
 		System.out.println(hashed);
-	}
+	}*/
 }
