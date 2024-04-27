@@ -96,7 +96,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             if (numLines >= 1) {
                 String message = "GET? " + numLines + "\n";
                 for (String line : keyLines) {
-                    message += line;
+                    message += line + "\n";
                 }
                 System.out.println("Sending message:\n" + message);
                 writer.write(message);
@@ -105,7 +105,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 System.out.println("\nWaiting for server response...\n");
 
                 // Handling the response if NOPE
-                System.out.println("Server says: " + reader.readLine());
                 String serverResponse = reader.readLine();
                 System.out.println("Server says: " + serverResponse);
                 if (serverResponse.equals("NOPE")) {
