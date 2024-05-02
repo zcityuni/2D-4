@@ -160,7 +160,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("====GET message sent!====\n");
                             writer.flush();
                             System.out.println("\nWaiting for server response...\n");
-                            if (responseLine.startsWith("VALUE")) {
+                            String respond = reader.readLine();
+                            if (respond.startsWith("VALUE")) {
                                 found = true;
                                 System.out.println("Server replied:");
                                 StringBuilder response = new StringBuilder();
@@ -171,8 +172,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                 System.out.println(response.toString());
                                 return response.toString();
                             }
-                            else if (responseLine.startsWith("NOPE")) {
-                                System.out.println("Server replied: " + responseLine);
+                            else if (respond.startsWith("NOPE")) {
+                                System.out.println("Server replied: " + respond);
                                 System.out.println("Value was not found at this node.");
                             }
                             else{
