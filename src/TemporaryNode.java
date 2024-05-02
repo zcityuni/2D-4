@@ -128,9 +128,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("Remaining Nodes to request: " + nodesCount);
                             continue;
                         }
+
                         if (nodesCount < 1) {
                             break;
                         } else {
+                            currentName = responseLine;
                             String ipAddress = responseLine;
                             System.out.println("Name: " + currentName);
                             System.out.println("IP Address: " + ipAddress);
