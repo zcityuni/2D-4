@@ -136,7 +136,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         }
                         if (responseLine.startsWith(IPAddr)) {
                             nodesCount--;
-                            System.out.println("Decreasing remaining node count to: " + nodesCount);
+                            System.out.println("Decreasing remaining node count to: " + nodesCount  +"\n");
                             continue;
                         }
 
@@ -160,8 +160,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("====GET message sent!====\n");
                             writer.flush();
                             System.out.println("\nWaiting for server response...\n");
-                            String respond = reader.readLine();
-                            if (respond.startsWith("VALUE")) {
+                            if (responseLine.startsWith("VALUE")) {
                                 found = true;
                                 System.out.println("Server replied:");
                                 StringBuilder response = new StringBuilder();
@@ -172,8 +171,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                 System.out.println(response.toString());
                                 return response.toString();
                             }
-                            else if (respond.startsWith("NOPE")) {
-                                System.out.println("Server replied: " + respond);
+                            else if (responseLine.startsWith("NOPE")) {
+                                System.out.println("Server replied: " + responseLine);
                                 System.out.println("Value was not found at this node.");
                             }
                             else{
