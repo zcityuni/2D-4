@@ -138,11 +138,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("Name: " + currentName);
                             System.out.println("IP Address: " + ipAddress);
                             this.start(currentName, ipAddress);
-                            System.out.println("Sending message:\n" + message);
+                            /*System.out.println("Sending message:\n" + message);
                             writer.write(message);
                             System.out.println("====GET message sent!====");
                             writer.flush();
-                            System.out.println("Waiting for server response...");
+                            System.out.println("Waiting for server response...");*/
                             currentName = null;
                         }
                     }
