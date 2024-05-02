@@ -122,6 +122,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     boolean firstLine = true; // flag to check if its the first line
                     String currentName = null;
                     while ((responseLine = reader.readLine()) != null || found) {
+                        System.out.println("\nSending a GET to each nearest full node...\n");
                         if (firstLine) {
                             firstLine = false;
                             continue;
@@ -142,8 +143,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             writer.flush();
                             System.out.println("Waiting for server response...");
                             String eachResponse = reader.readLine();
-                            System.out.println("Server says: " + eachResponse);
                             if (eachResponse.startsWith("VALUE")) {
+                                found = true;
                                 System.out.println("\n Server Says:\n");
                                 StringBuilder response = new StringBuilder();
                                 String line;
