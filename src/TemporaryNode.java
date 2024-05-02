@@ -99,7 +99,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 for (String line : keyLines) {
                     message += line + "\n";
                 }
-                System.out.println("Sending a GET? message to the server..." + message);
+                System.out.println("Sending a GET? message to the server...\n" + message);
                 writer.write(message);
                 System.out.println("====GET message sent!====");
                 writer.flush();
@@ -125,7 +125,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     while ((responseLine = reader.readLine()) != null) {
                         if (responseLine.startsWith("NODES")) {
                             nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
-                            System.out.println(nodesCount + "Full nodes found, sending each one a GET?");
+                            System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
                             continue;
                         }
 
@@ -140,11 +140,15 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("IP Address: " + currentAddress);
                             // Send the start command to connect then send a GET?
                             this.start(currentName, currentAddress);
-                            System.out.println("Sending the server a GET? message:" + message);
+                            message = "GET? " + numLines + "\n";
+                            for (String line : keyLines) {
+                                message += line + "\n";
+                            }
+                            System.out.println("Sending a GET? message to the server...\n" + message);
                             writer.write(message);
-                            System.out.println("====GET message sent!====\n");
+                            System.out.println("====GET message sent!====");
                             writer.flush();
-                            System.out.println("Waiting for server response...\n");
+                            System.out.println("\nWaiting for server response...\n");
                             if (responseLine.startsWith("VALUE")) {
                                 found = true;
                                 System.out.println("Server replied:");
