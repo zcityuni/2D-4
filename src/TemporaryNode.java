@@ -119,9 +119,12 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     // Read and print out the response from nearest command which should have list of nodes
                     System.out.println("Server replied:");
                     String responseLine;
-                    String currentName = null;
                     int nodesCount = 0;
-                    while ((responseLine = reader.readLine()) != null || found) {
+                    String currentName = null;
+                    String currentAddress = null;
+
+                    // for each node that NEAREST? command gives us. lets connect to and send each a GET? req
+                    while ((responseLine = reader.readLine()) != null) {
                         if (responseLine.startsWith("NODES")) {
                             nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
                             System.out.println("\nSending a GET to each nearest full node\n");
@@ -130,13 +133,17 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         }
 
                         if (nodesCount < 1) {
-                            break;
-                        } else {
+                            break; // Break out of the loop if we have parsed and acted on all nodes
+                        }
+
+                        if (currentName == null) {
                             currentName = responseLine;
-                            String ipAddress = responseLine;
                             System.out.println("Name: " + currentName);
-                            System.out.println("IP Address: " + ipAddress);
-                            this.start(currentName, ipAddress);
+                        } else {
+                            currentAddress = responseLine;
+                            System.out.println("IP Address: " + currentAddress);
+                            // Send the start command to connect then send a GET?
+                            this.start(currentName, currentAddress);
                             System.out.println("Sending message:\n" + message);
                             writer.write(message);
                             System.out.println("====GET message sent!====");
@@ -154,7 +161,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                 System.out.println(response.toString());
                                 return response.toString();
                             }
+                            // Reset name and IP for the next node to parse and connect to and decrement count
                             currentName = null;
+                            currentAddress = null;
                             nodesCount--;
                         }
                     }
