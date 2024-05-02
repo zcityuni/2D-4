@@ -128,6 +128,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
                             continue;
                         }
+                        if (responseLine.startsWith(name) || responseLine.startsWith(host.toString())) {
+                            continue;
+                        }
 
                         if (nodesCount < 1) {
                             break; // Break out of the loop if we have parsed and acted on all nodes
