@@ -124,7 +124,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     boolean firstLine = true; // flag to check if its the first line
                     String currentName = null;
                     while ((responseLine = reader.readLine()) != null || found) {
-                        if (firstLine || responseLine.startsWith(name) || responseLine.startsWith(ipaddr)) {
+                        if (firstLine) {
                             firstLine = false;
                             continue;
                         }
