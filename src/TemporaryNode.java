@@ -109,12 +109,12 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 String serverResponse = reader.readLine();
                 System.out.println("Server says: " + serverResponse);
                 if (serverResponse.equals("NOPE")) {
-                    System.out.println("\nValue not found at this full node, asking for nearest nodes...\n");
+                    System.out.println("\nValue not found at this full node, asking for nearest nodes...");
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
-                    System.out.println("\n====NEAREST message sent!====\n");
                     System.out.println("NEAREST? " + nodeHashID + "\n");
+                    System.out.println("====NEAREST message sent!====");
 
                     // Read and print out the response from nearest command which should have list of nodes
                     System.out.println("Server replied:");
@@ -125,11 +125,10 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         if (responseLine.startsWith("NODES")) {
                             nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
                             System.out.println("\nSending a GET to each nearest full node\n");
-                            System.out.println(" Remaining Nodes to request: " + nodesCount);
+                            System.out.println("Remaining Nodes to request: " + nodesCount);
                             continue;
                         }
-                        if (currentName == null || nodesCount < 1) {
-                            currentName = responseLine;
+                        if (nodesCount < 1) {
                             break;
                         } else {
                             String ipAddress = responseLine;
