@@ -121,17 +121,21 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String responseLine;
                     boolean firstLine = true; // flag to check if its the first line
                     String currentName = null;
+                    int nodesCount = 0;
                     while ((responseLine = reader.readLine()) != null || found) {
-                        System.out.println("\nSending a GET to each nearest full node...\n");
+                        System.out.println("\nSending a GET to each nearest full node\n");
                         if (firstLine) {
                             firstLine = false;
                             continue;
                         }
                         if (responseLine.startsWith("NODES")) {
+                            nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
+                            System.out.println(" Remaining Nodes to request: " + nodesCount);
                             break; // break out if its the first response line
                         }
-                        if (currentName == null) {
+                        if (currentName == null || nodesCount < 1) {
                             currentName = responseLine;
+                            break;
                         } else {
                             String ipAddress = responseLine;
                             System.out.println("Name: " + currentName);
@@ -155,6 +159,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                 return response.toString();
                             }
                             currentName = null;
+                            nodesCount--;
                         }
                     }
                 } else if(serverResponse.startsWith("VALUE")){
