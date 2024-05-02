@@ -23,6 +23,7 @@ interface TemporaryNodeInterface {
 public class TemporaryNode implements TemporaryNodeInterface {
     String port;
     InetAddress host;
+    String IPAddr;
     String name;
     Socket clientSocket;
 
@@ -37,6 +38,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
         String[] fullnodeAddr = startingNodeAddress.split(":");
 
         String IPAddressString = fullnodeAddr[0];
+        IPAddr = startingNodeAddress;
         port = fullnodeAddr[1];
         host = InetAddress.getByName(IPAddressString);
 
@@ -128,7 +130,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
                             continue;
                         }
-                        if (responseLine.startsWith(name) || responseLine.startsWith(host.toString())) {
+                        if (responseLine.startsWith(name) || responseLine.startsWith(IPAddr)) {
                             System.out.println("Skipping the same node we are connected to...\n");
                             continue;
                         }
