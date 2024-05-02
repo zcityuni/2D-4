@@ -22,6 +22,7 @@ interface TemporaryNodeInterface {
 
 public class TemporaryNode implements TemporaryNodeInterface {
     String port;
+    String ipaddr;
     InetAddress host;
     String name;
     Socket clientSocket;
@@ -33,6 +34,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
         // These are the details of the node we are connecting to
         name = startingNodeName;
+        ipaddr = startingNodeAddress;
         String[] fullnodeName = startingNodeName.split(":");
         String[] fullnodeAddr = startingNodeAddress.split(":");
 
@@ -51,10 +53,10 @@ public class TemporaryNode implements TemporaryNodeInterface {
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("\nSending a START message to the server...\n");
             String myNode = "addf081@city.ac.uk:TempNodeZ123";
-            writer.write("START 1 " + myNode + "\n");
+            writer.write("START 1 " + myNode);
             writer.flush();
-            System.out.println("Sending Message:\nSTART 1 " + myNode + "\n");
-            System.out.println("\nSTART message sent!\n");
+            System.out.println("Sending Message:\nSTART 1 " + myNode);
+            System.out.println("====START message sent!====");
             return true;
         } catch (SocketException e){
             System.out.println(e.toString());
@@ -74,7 +76,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             int valLength = value.length();
             writer.write("PUT?  " + keyLength + " " + valLength + "\n");
             writer.flush();
-            System.out.println("\nPUT message sent!\n");
+            System.out.println("====PUT message sent!====");
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
@@ -101,9 +103,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 }
                 System.out.println("Sending message:\n" + message);
                 writer.write(message);
-                System.out.println("\nGET message sent!\n");
+                System.out.println("====GET message sent!====");
                 writer.flush();
-                System.out.println("\nWaiting for server response...\n");
+                System.out.println("Waiting for server response...");
 
                 // Handling the response if NOPE
                 String serverResponse = reader.readLine();
@@ -121,8 +123,8 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String responseLine;
                     boolean firstLine = true; // flag to check if its the first line
                     String currentName = null;
-                    while ((responseLine = reader.readLine()) != null) {
-                        if (firstLine) {
+                    while ((responseLine = reader.readLine()) != null || found) {
+                        if (firstLine || responseLine.startsWith(name) || responseLine.startsWith(ipaddr)) {
                             firstLine = false;
                             continue;
                         }
@@ -136,6 +138,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("Name: " + currentName);
                             System.out.println("IP Address: " + ipAddress);
                             this.start(currentName, ipAddress);
+                            System.out.println("Sending message:\n" + message);
+                            writer.write(message);
+                            System.out.println("====GET message sent!====");
+                            writer.flush();
+                            System.out.println("Waiting for server response...");
                             currentName = null;
                         }
                     }
