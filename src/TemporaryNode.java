@@ -87,6 +87,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 	// Implement this!
 	// Return the string if the get worked
 	// Return null if it didn't
+        boolean found = false;
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -134,13 +135,14 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             String ipAddress = responseLine;
                             System.out.println("Name: " + currentName);
                             System.out.println("IP Address: " + ipAddress);
+                            this.start(currentName, ipAddress);
                             currentName = null;
                         }
                     }
-                    // implement for loop to ask GET for each of those returned nodes
                     return "NOPE";
                 } else{
                     // the response is valid
+                    found = true;
                     System.out.println("\n RESPONSE VALID!\n");
                     // print out the response (the value stored for that key)
                     StringBuilder response = new StringBuilder();
@@ -156,7 +158,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 end("GET numLines error");
                 throw new IOException("Number of lines must be at least 1");
             }
-
         } catch(IOException e){
             System.out.println(e.toString());
             end("GET failed");
