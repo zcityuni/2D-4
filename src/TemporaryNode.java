@@ -160,24 +160,10 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("====GET message sent!====\n");
                             writer.flush();
                             System.out.println("\nWaiting for server response...\n");
-                            if (responseLine.startsWith("VALUE")) {
-                                found = true;
-                                System.out.println("Server replied:");
-                                StringBuilder response = new StringBuilder();
-                                String line;
-                                while ((line = reader.readLine()) != null) {
-                                    response.append(line).append("\n");
-                                }
-                                System.out.println(response.toString());
-                                return response.toString();
-                            }
-                            else if (responseLine.startsWith("NOPE")) {
-                                System.out.println("Server replied: " + responseLine);
-                                System.out.println("Value was not found at this node.");
-                            }
-                            else{
-                                System.out.println("Server replied: " + responseLine);
-                                System.out.println("Wrong GET? format?");
+                            String response = processGetResponse(reader);
+                            if (response != null) {
+                                System.out.println("Server replied:\n" + response);
+                                return response;
                             }
                             // Reset name and IP for the next node to parse and connect to and decrement count
                             currentName = null;
@@ -207,6 +193,27 @@ public class TemporaryNode implements TemporaryNodeInterface {
         } catch (Exception e) {
             end("HASHING ID FAILED");
             throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    private String processGetResponse(BufferedReader reader) throws IOException {
+        String responseLine;
+        while ((responseLine = reader.readLine()) != null) {
+            if (responseLine.startsWith("VALUE")) {
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line).append("\n");
+                }
+                return response.toString();
+            } else if (responseLine.startsWith("NOPE")) {
+                System.out.println("Value was not found at this node.");
+                return null;
+            } else {
+                System.out.println("Wrong GET? format?");
+                return null;
+            }
         }
         return null;
     }
