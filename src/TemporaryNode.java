@@ -137,7 +137,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             String ipAddress = responseLine;
                             System.out.println("Name: " + currentName);
                             System.out.println("IP Address: " + ipAddress);
-                            this.start(currentName, ipAddress);
+                            start(currentName, ipAddress);
                             /*System.out.println("Sending message:\n" + message);
                             writer.write(message);
                             System.out.println("====GET message sent!====");
