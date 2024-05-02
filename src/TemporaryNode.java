@@ -132,6 +132,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         }
                         if (responseLine.startsWith(name) || responseLine.startsWith(IPAddr)) {
                             System.out.println("Skipping the same node we are connected to...\n");
+                            nodesCount--;
                             continue;
                         }
 
