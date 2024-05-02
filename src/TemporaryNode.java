@@ -112,22 +112,30 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
+                    System.out.println("\n NEAREST message sent!\n");
                     System.out.println("NEAREST? " + nodeHashID + "\n");
-                    System.out.println("\nNEAREST message sent!\n");
 
                     // Read and print out the response from nearest command which should have list of nodes
                     System.out.println("Server replied:");
                     String responseLine;
+                    boolean firstLine = true; // flag to check if its the first line
+                    String currentName = null;
                     while ((responseLine = reader.readLine()) != null) {
-                        System.out.println(responseLine);
-                        if (responseLine.startsWith("NODES")) {
+                        if (firstLine) {
+                            firstLine = false;
                             continue;
                         }
-                        String[] parts = responseLine.split(",");
-                        String name = parts[0];
-                        String ipAddress = parts[1];
-                        System.out.println("Name: " + name);
-                        System.out.println("IP Address: " + ipAddress);
+                        if (responseLine.startsWith("NODES")) {
+                            break; // break out if its the first response line
+                        }
+                        if (currentName == null) {
+                            currentName = responseLine;
+                        } else {
+                            String ipAddress = responseLine;
+                            System.out.println("Name: " + currentName);
+                            System.out.println("IP Address: " + ipAddress);
+                            currentName = null;
+                        }
                     }
                     // implement for loop to ask GET for each of those returned nodes
                     return "NOPE";
