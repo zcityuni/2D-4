@@ -123,11 +123,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String currentName = null;
                     int nodesCount = 0;
                     while ((responseLine = reader.readLine()) != null || found) {
-                        System.out.println("\nSending a GET to each nearest full node\n");
                         if (responseLine.startsWith("NODES")) {
                             nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
+                            System.out.println("\nSending a GET to each nearest full node\n");
                             System.out.println(" Remaining Nodes to request: " + nodesCount);
                             break; // break out if its the first response line
+                        }  else {
+                            end("Incorrect Nearest Format");
                         }
                         if (firstLine) {
                             firstLine = false;
