@@ -130,9 +130,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
                             continue;
                         }
-                        if (responseLine.startsWith(name) || responseLine.startsWith(IPAddr)) {
-                            System.out.println("Skipping the same node we are connected to...\n");
+                        if (responseLine.startsWith(name)) {
+                            System.out.println("Skipping the same node we are connected to...");
+                            continue;
+                        }
+                        if (responseLine.startsWith(IPAddr)) {
                             nodesCount--;
+                            System.out.println("Decreasing remaining node count to: " + nodesCount);
                             continue;
                         }
 
