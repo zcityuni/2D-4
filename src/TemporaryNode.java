@@ -135,7 +135,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         if (nodesCount < 1) {
                             break; // Break out of the loop if we have parsed and acted on all nodes
                         }
-
                         if (currentName == null) {
                             currentName = responseLine;
                             System.out.println("Name: " + currentName);
@@ -149,8 +148,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("====GET message sent!====");
                             writer.flush();
                             System.out.println("Waiting for server response...");
-                            String eachResponse = reader.readLine();
-                            if (eachResponse.startsWith("VALUE")) {
+                            if (responseLine.startsWith("VALUE")) {
                                 found = true;
                                 System.out.println("\n Server Says:\n");
                                 StringBuilder response = new StringBuilder();
@@ -160,6 +158,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                 }
                                 System.out.println(response.toString());
                                 return response.toString();
+                            }
+                            else if (responseLine.startsWith("NOPE")) {
+                                System.out.println("Value was not found at this node.");
                             }
                             // Reset name and IP for the next node to parse and connect to and decrement count
                             currentName = null;
