@@ -124,14 +124,14 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     int nodesCount = 0;
                     while ((responseLine = reader.readLine()) != null || found) {
                         System.out.println("\nSending a GET to each nearest full node\n");
-                        if (firstLine) {
-                            firstLine = false;
-                            continue;
-                        }
                         if (responseLine.startsWith("NODES")) {
                             nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
                             System.out.println(" Remaining Nodes to request: " + nodesCount);
                             break; // break out if its the first response line
+                        }
+                        if (firstLine) {
+                            firstLine = false;
+                            continue;
                         }
                         if (currentName == null || nodesCount < 1) {
                             currentName = responseLine;
