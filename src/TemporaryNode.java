@@ -141,15 +141,24 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("====GET message sent!====");
                             writer.flush();
                             System.out.println("Waiting for server response...");
+                            String eachResponse = reader.readLine();
+                            System.out.println("Server says: " + eachResponse);
+                            if (eachResponse.startsWith("VALUE")) {
+                                System.out.println("\n Server Says:\n");
+                                StringBuilder response = new StringBuilder();
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    response.append(line).append("\n");
+                                }
+                                System.out.println(response.toString());
+                                return response.toString();
+                            }
                             currentName = null;
                         }
                     }
-                    return null;
-                } else{
-                    // the response is valid
+                } else if(serverResponse.startsWith("VALUE")){
                     found = true;
-                    System.out.println("\n RESPONSE VALID!\n");
-                    // print out the response (the value stored for that key)
+                    System.out.println("\n Server Says:\n");
                     StringBuilder response = new StringBuilder();
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -158,7 +167,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     System.out.println(response.toString());
                     return response.toString();
                 }
-
             } else{ // If numLines is less than 1
                 end("GET numLines error");
                 throw new IOException("Number of lines must be at least 1");
@@ -171,6 +179,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             end("HASHING ID FAILED");
             throw new RuntimeException(e);
         }
+        return null;
     }
 
     public String hash(String nodeName) throws Exception {
