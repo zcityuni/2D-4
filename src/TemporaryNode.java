@@ -22,7 +22,6 @@ interface TemporaryNodeInterface {
 
 public class TemporaryNode implements TemporaryNodeInterface {
     String port;
-    String ipaddr;
     InetAddress host;
     String name;
     Socket clientSocket;
@@ -40,7 +39,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
         String IPAddressString = fullnodeAddr[0];
         port = fullnodeAddr[1];
         InetAddress host = InetAddress.getByName(IPAddressString);
-        ipaddr = host.toString();
 
         try{
             System.out.println("\nTCPClient connecting to " + host.toString() + ":" + port + "\n" + name + "\n");
@@ -53,10 +51,10 @@ public class TemporaryNode implements TemporaryNodeInterface {
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("\nSending a START message to the server...\n");
             String myNode = "addf081@city.ac.uk:TempNodeZ123";
-            writer.write("START 1 " + myNode);
+            writer.write("START 1 " + myNode + "\n");
             writer.flush();
-            System.out.println("Sending Message:\nSTART 1 " + myNode);
-            System.out.println("====START message sent!====");
+            System.out.println("Sending Message:\nSTART 1 " + myNode + "\n");
+            System.out.println("\n====START message sent!====\n");
             return true;
         } catch (SocketException e){
             System.out.println(e.toString());
@@ -76,7 +74,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             int valLength = value.length();
             writer.write("PUT?  " + keyLength + " " + valLength + "\n");
             writer.flush();
-            System.out.println("====PUT message sent!====");
+            System.out.println("\n====PUT message sent!=====\n");
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
@@ -103,9 +101,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 }
                 System.out.println("Sending message:\n" + message);
                 writer.write(message);
-                System.out.println("====GET message sent!====");
+                System.out.println("\n====GET message sent!====\n");
                 writer.flush();
-                System.out.println("Waiting for server response...");
+                System.out.println("\nWaiting for server response...\n");
 
                 // Handling the response if NOPE
                 String serverResponse = reader.readLine();
@@ -115,7 +113,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     String nodeHashID = hash(name);
                     writer.write("NEAREST? " + nodeHashID + "\n");
                     writer.flush();
-                    System.out.println("\n NEAREST message sent!\n");
+                    System.out.println("\n====NEAREST message sent!====\n");
                     System.out.println("NEAREST? " + nodeHashID + "\n");
 
                     // Read and print out the response from nearest command which should have list of nodes
@@ -137,16 +135,16 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             String ipAddress = responseLine;
                             System.out.println("Name: " + currentName);
                             System.out.println("IP Address: " + ipAddress);
-                            start(currentName, ipAddress);
-                            /*System.out.println("Sending message:\n" + message);
+                            this.start(currentName, ipAddress);
+                            System.out.println("Sending message:\n" + message);
                             writer.write(message);
                             System.out.println("====GET message sent!====");
                             writer.flush();
-                            System.out.println("Waiting for server response...");*/
+                            System.out.println("Waiting for server response...");
                             currentName = null;
                         }
                     }
-                    return "NOPE";
+                    return null;
                 } else{
                     // the response is valid
                     found = true;
