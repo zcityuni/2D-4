@@ -34,16 +34,16 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
         // These are the details of the node we are connecting to
         name = startingNodeName;
-        ipaddr = startingNodeAddress;
         String[] fullnodeName = startingNodeName.split(":");
         String[] fullnodeAddr = startingNodeAddress.split(":");
 
         String IPAddressString = fullnodeAddr[0];
         port = fullnodeAddr[1];
         InetAddress host = InetAddress.getByName(IPAddressString);
+        ipaddr = host.toString();
 
         try{
-            System.out.println("\nTCPClient connecting to " + host.toString() + ":" + ipaddr + "\n" + name + "\n");
+            System.out.println("\nTCPClient connecting to " + host.toString() + ":" + port + "\n" + name + "\n");
             clientSocket = new Socket(host, Integer.parseInt(port));
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
@@ -124,7 +124,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     boolean firstLine = true; // flag to check if its the first line
                     String currentName = null;
                     while ((responseLine = reader.readLine()) != null || found) {
-                        if (firstLine) {
+                        if (firstLine || responseLine.startsWith(name) || responseLine.startsWith(ipaddr)) {
                             firstLine = false;
                             continue;
                         }
