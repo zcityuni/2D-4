@@ -176,6 +176,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                 System.out.println("Value was not found at this node.");
                             }
                             else{
+                                System.out.println("Server replied: " + responseLine);
                                 System.out.println("Wrong GET? format?");
                             }
                             // Reset name and IP for the next node to parse and connect to and decrement count
