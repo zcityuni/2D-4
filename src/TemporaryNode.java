@@ -119,7 +119,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     // Read and print out the response from nearest command which should have list of nodes
                     System.out.println("Server replied:");
                     String responseLine;
-                    boolean firstLine = true; // flag to check if its the first line
                     String currentName = null;
                     int nodesCount = 0;
                     while ((responseLine = reader.readLine()) != null || found) {
@@ -127,12 +126,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
                             System.out.println("\nSending a GET to each nearest full node\n");
                             System.out.println(" Remaining Nodes to request: " + nodesCount);
-                            break; // break out if its the first response line
-                        }  else {
-                            end("Incorrect Nearest Format");
-                        }
-                        if (firstLine) {
-                            firstLine = false;
                             continue;
                         }
                         if (currentName == null || nodesCount < 1) {
