@@ -123,6 +123,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     StringBuilder nearestResponse = new StringBuilder();
                     String responseLine;
                     while ((responseLine = reader.readLine()) != null) {
+                        System.out.println(responseLine);
                         nearestResponse.append(responseLine).append("\n");
                     }
 
