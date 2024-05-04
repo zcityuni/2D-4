@@ -233,12 +233,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 while ((responseLine = reader.readLine()) != null) {
                     nearestResponse.append(responseLine);
                     System.out.println(responseLine);
-                    boolean bool = responseLine != null;
-                    System.out.println(bool);
-                    if(responseLine.isEmpty()){
+                    if(responseLine == null){
                         break;
                     }
                 }
+                System.out.println("reached");
 
                 // Split the response string of nearest command
                 String nearestResponseString = nearestResponse.toString();
