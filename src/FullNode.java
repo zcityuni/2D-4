@@ -176,6 +176,10 @@ public class FullNode implements FullNodeInterface {
                     System.out.println(nodesCount + " Full nodes found, sending each one a NOTIFY?");
                     continue;
                 }
+                if (nearestResponseLine.startsWith(name)) {
+                    System.out.println("Skipping the same node we are connected to...");
+                    continue;
+                }
                 if (nodesCount < 1) {
                     break; // break out of the loop if we have parsed and acted on all nodes
                 }
