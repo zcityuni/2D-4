@@ -176,7 +176,7 @@ public class FullNode implements FullNodeInterface {
                     System.out.println(nodesCount + " Full nodes found, sending each one a NOTIFY?");
                     continue;
                 }
-                if (nearestResponseLine.startsWith(name)) {
+                if (nearestResponseLine.startsWith(selfName)) {
                     System.out.println("Skipping the same node we are connected to...");
                     continue;
                 }
