@@ -299,7 +299,6 @@ public class FullNode implements FullNodeInterface {
             String keyHashID = hash(key.toString());
             String myHashID = hash(selfName);
             List<String[]> nearestNodes = getClosestNodes(keyHashID);
-            nearestNodes.removeIf(node -> Arrays.asList(node).contains(null)); // remove null elements
             int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
             for (String[] node : nearestNodes) {
                 String nodeHashID = hash(node[0]);
@@ -324,8 +323,8 @@ public class FullNode implements FullNodeInterface {
             // respond with 3 closest nodes to tha requesters provided hashID
             String[] nearestResponse = request.split(" ");
             String hashID = nearestResponse[1];
+            System.out.println("Nearest nodes: ");
             List<String[]> nearestNodes = getClosestNodes(hashID);
-            nearestNodes.removeIf(node -> Arrays.asList(node).contains(null)); // remove null elements
             // print out the nearest nodes names and addresses for the hash
             StringBuilder message = new StringBuilder();
             int nodeCount = 0;
@@ -338,6 +337,8 @@ public class FullNode implements FullNodeInterface {
             // write it to the writer
             writer.write("NODES " + nodeCount + "\n" + message.toString());
             writer.flush();
+            System.out.println(message);
+            System.out.println("Sent nearest nodes");
         }
         else if(request.startsWith("NOTIFY?")){
             // record the name given in our network map and respond with notified if appropriate (passive mapping)
