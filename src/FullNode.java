@@ -25,6 +25,7 @@ public class FullNode implements FullNodeInterface {
     private String selfAddress;
     private int selfPort;
     private ServerSocket serverSocket;
+    private Socket connectedClient;
     private Socket selfClient;
 
     // Details of other servers we connect to
@@ -39,8 +40,6 @@ public class FullNode implements FullNodeInterface {
     }
     public boolean listen(String ipAddress, int portNumber) throws IOException {
         // this is to open a server to listen for connections from other nodes
-        final Socket[] clientSocket = new Socket[1];
-
         try {
             // open a new server socket to allow connections
             selfPort = portNumber;
@@ -54,12 +53,12 @@ public class FullNode implements FullNodeInterface {
             new Thread(() -> {
                 while (true) {
                     try {
-                        clientSocket[0] = serverSocket.accept();
-                        System.out.println("Connected to: " + clientSocket[0].getInetAddress().toString());
+                        connectedClient = serverSocket.accept();
+                        System.out.println("Connected to: " + connectedClient.getInetAddress().toString());
                         new Thread(() -> {
                             try {
-                                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket[0].getInputStream()));
-                                Writer writer = new OutputStreamWriter(clientSocket[0].getOutputStream());
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
+                                Writer writer = new OutputStreamWriter(connectedClient.getOutputStream());
                                 System.out.println("\nSending a START message to the server...\n");
                                 writer.write("START 1 " + selfName + "\n");
                                 writer.flush();
@@ -69,9 +68,9 @@ public class FullNode implements FullNodeInterface {
                                 String response = reader.readLine();
                                 if(response.startsWith("START")){
                                     System.out.println("Connection established!");
-                                    processClientRequests(clientSocket[0]);
+                                    processClientRequests(connectedClient);
                                 } else{
-                                    end("Invalid connection", clientSocket[0]);
+                                    end("Invalid connection", connectedClient);
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -82,7 +81,7 @@ public class FullNode implements FullNodeInterface {
                     } catch (IOException e) {
                         System.out.println("Failed to accept client connection");
                         try {
-                            end("Connection failed", clientSocket[0]);
+                            end("Connection failed", connectedClient);
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -92,8 +91,8 @@ public class FullNode implements FullNodeInterface {
             return true;
         } catch (IOException e) {
             System.out.println("Failed to open server socket");
-            if (clientSocket[0] != null) {
-                clientSocket[0].close();
+            if (connectedClient != null) {
+                connectedClient.close();
             }
             serverSocket.close();
             return false;
