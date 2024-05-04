@@ -510,10 +510,13 @@ public class FullNode implements FullNodeInterface {
 
     public boolean echo() throws IOException {
         try{
+            BufferedReader reader = new BufferedReader(new InputStreamReader(selfClient.getInputStream()));
             Writer writer = new OutputStreamWriter(selfClient.getOutputStream());
             System.out.println("\nSending an ECHO message to the server...\n");
             writer.write("ECHO?\n");
             writer.flush();
+            String response = reader.readLine();
+            System.out.println("Server replied: " + response);
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
