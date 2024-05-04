@@ -79,7 +79,6 @@ public class FullNode implements FullNodeInterface {
                                 throw new RuntimeException(e);
                             }
                         }).start();
-
                     } catch (IOException e) {
                         System.out.println("Failed to accept client connection");
                         try {
@@ -90,6 +89,7 @@ public class FullNode implements FullNodeInterface {
                     }
                 }
             }).start();
+            return true;
         } catch (IOException e) {
             System.out.println("Failed to open server socket");
             if (clientSocket[0] != null) {
@@ -98,7 +98,6 @@ public class FullNode implements FullNodeInterface {
             serverSocket.close();
             return false;
         }
-        return false;
     }
 
     public void handleIncomingConnections(String startingNodeName, String startingNodeAddress) throws IOException {
