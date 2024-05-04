@@ -8,8 +8,7 @@
 
 import java.io.*;
 import java.net.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 // DO NOT EDIT starts
 interface FullNodeInterface {
@@ -20,8 +19,8 @@ interface FullNodeInterface {
 
 
 public class FullNode implements FullNodeInterface {
-    private Map<String, String> valueMap = new HashMap<>();
-    private Map<String, String> networkMap = new HashMap<>();
+    private Map<String, String> valueMap;
+    private Map<Integer, List<String[]>> networkMap; // Distance -> List of nodes at that distance
     private String selfName;
     private String selfAddress;
     private int selfPort;
@@ -35,6 +34,11 @@ public class FullNode implements FullNodeInterface {
     private String name;
 
     // 127.0.0.1:2244
+    public FullNode(){
+        networkMap = new HashMap<>();
+        valueMap = new HashMap<>();
+        selfName = "addf081@city.ac.uk:FullNodeZ123";
+    }
     public boolean listen(String ipAddress, int portNumber) throws IOException {
         // this is to open a server to listen for connections from other nodes
         final Socket[] clientSocket = new Socket[1];
@@ -45,6 +49,8 @@ public class FullNode implements FullNodeInterface {
             selfAddress = ipAddress + ":" + selfPort;
             serverSocket = new ServerSocket(selfPort);
             System.out.println("Opening server: " + ipAddress + " listening on port " + selfPort + "\n");
+            // add self to the network map with a distance of 0, double arr used because List.of treats as one
+            networkMap.put(0, List.of(new String[][] {new String[] {selfName, selfAddress}}));
 
             // multithread to allow multiple connections and handle each one at same time
             while (true) {
@@ -56,7 +62,6 @@ public class FullNode implements FullNodeInterface {
                             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket[0].getInputStream()));
                             Writer writer = new OutputStreamWriter(clientSocket[0].getOutputStream());
                             System.out.println("\nSending a START message to the server...\n");
-                            selfName = "addf081@city.ac.uk:FullNodeZ123";
                             writer.write("START 1 " + selfName + "\n");
                             writer.flush();
                             System.out.println("START 1 " + selfName);
@@ -74,7 +79,7 @@ public class FullNode implements FullNodeInterface {
                         // repond to commmands from clients
                         try {
                             processClientRequests(clientSocket[0]);
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     }).start();
@@ -96,7 +101,7 @@ public class FullNode implements FullNodeInterface {
 
     public void handleIncomingConnections(String startingNodeName, String startingNodeAddress) throws IOException {
         // connect to the network and notify
-        // These are the details of the node we are connecting to
+        // these are the details of the node we are connecting to
         name = startingNodeName;
         String[] fullnodeName = startingNodeName.split(":");
         String[] fullnodeAddr = startingNodeAddress.split(":");
@@ -139,8 +144,8 @@ public class FullNode implements FullNodeInterface {
         }
     }
 
-    public void processClientRequests(Socket connectedClient) throws IOException {
-        // Handle the requests sent from other nodes here
+    public void processClientRequests(Socket connectedClient) throws Exception {
+        // handle the requests sent from other nodes here
         BufferedReader reader = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
         Writer writer = new OutputStreamWriter(connectedClient.getOutputStream());
         String request = reader.readLine();
@@ -151,6 +156,7 @@ public class FullNode implements FullNodeInterface {
             writer.write("OHCE\n");
             writer.flush();
             response = "OHCE\n";
+            System.out.println("Echoed back!");
         }
         else if(request.startsWith("GET?")){
             // handle a GET request by looking up the key in our table
@@ -158,14 +164,36 @@ public class FullNode implements FullNodeInterface {
         }
         else if(request.startsWith("PUT?")){
             // handle a PUT request by seeing if we are close enough to keys hashID store it
+
         }
         else if(request.startsWith("NEAREST?")){
             // respond with 3 closest nodes to tha requesters provided hashID
-
+            String[] nearestResponse = request.split(" ");
+            String hashID = nearestResponse[1];
+            List<String[]> nearestNodes = respondToNearest(hashID);
+            // print out the nearest nodes names and addresses for the hash
+            for (String[] node : nearestNodes) {
+                String nodeName = node[0];
+                String nodeAddress = node[1];
+                System.out.println("Node Name: " + nodeName);
+                System.out.println("Node IP: " + nodeAddress);
+                System.out.println();
+            }
+            // write it to the writer
         }
         else if(request.startsWith("NOTIFY?")){
             // record the name given in our network map and respond with notified if appropriate (passive mapping)
-
+            String[] notifyResponse = request.split("\\n");
+            String name = notifyResponse[1];
+            String IPAddr = notifyResponse[2];
+            String hashID = hash(notifyResponse[1]);
+            // get distance by comparing hashID of our name to hashID of their name
+            int distance = calculateHashIDDistance(hash(selfName), hashID);
+            // store in our map at that distance
+            networkMap.put(distance, List.of(new String[][] {new String[] {name, IPAddr}}));
+            writer.write("NOTIFIED\n");
+            writer.flush();
+            System.out.println("Notified node and stored details");
         }
         else if(request.startsWith("END")){
             end("Client ended the communication", connectedClient);
@@ -175,12 +203,73 @@ public class FullNode implements FullNodeInterface {
             end("Invalid command", connectedClient);
             System.out.println("Client sent an invalid command, communication has been closed.");
         }
+    }
 
+    public int calculateHashIDDistance(String hashID1, String hashID2) {
+        int distance = 0;
+        for (int i = 0; i < 64; i++) {
+            // compare the hash similarity one char at a time
+            if (hashID1.charAt(i) != hashID2.charAt(i)) {
+                distance = 256 - i;
+                break;
+            }
+        }
+        return distance;
+    }
+
+    public List<String[]> respondToNearest(String givenHashID) throws Exception {
+        String closestNodeName = null;
+        String closestNodeIP = null;
+        String secondClosestNodeName = null;
+        String secondClosestNodeIP = null;
+        String thirdClosestNodeName = null;
+        String thirdClosestNodeIP = null;
+        // init max distances to 256 as described in RFC
+        int closestDistance = 256;
+        int secondClosestDistance = 256;
+        int thirdClosestDistance = 256;
+
+        for (Map.Entry<Integer, List<String[]>> entry : networkMap.entrySet()) {
+            List<String[]> nodes = entry.getValue();
+            for (String[] node : nodes) {
+                String nodeName = node[0];
+                String nodeAddress = node[1];
+                String nodeHashID = hash(nodeName);
+                int distance = calculateHashIDDistance(nodeHashID, givenHashID);
+
+                if (distance < closestDistance) {
+                    thirdClosestDistance = secondClosestDistance;
+                    thirdClosestNodeName = secondClosestNodeName;
+                    thirdClosestNodeIP = secondClosestNodeIP;
+                    secondClosestDistance = closestDistance;
+                    secondClosestNodeName = closestNodeName;
+                    secondClosestNodeIP = closestNodeIP;
+                    closestDistance = distance;
+                    closestNodeName = nodeName;
+                    closestNodeIP = nodeAddress;
+                } else if (distance < secondClosestDistance) {
+                    thirdClosestDistance = secondClosestDistance;
+                    thirdClosestNodeName = secondClosestNodeName;
+                    thirdClosestNodeIP = secondClosestNodeIP;
+                    secondClosestDistance = distance;
+                    secondClosestNodeName = nodeName;
+                    secondClosestNodeIP = nodeAddress;
+                } else if (distance < thirdClosestDistance) {
+                    thirdClosestDistance = distance;
+                    thirdClosestNodeName = nodeName;
+                    thirdClosestNodeIP = nodeAddress;
+                }
+            }
+        }
+        List<String[]> closestNodes = new ArrayList<>();
+        closestNodes.add(new String[]{closestNodeName, closestNodeIP});
+        closestNodes.add(new String[]{secondClosestNodeName, secondClosestNodeIP});
+        closestNodes.add(new String[]{thirdClosestNodeName, thirdClosestNodeIP});
+        return closestNodes;
     }
 
     public boolean start(String startingNodeName, String startingNodeAddress) throws IOException {
-
-        // These are the details of the node we are connecting to
+        // these are the details of the node we are connecting to
         name = startingNodeName;
         String[] fullnodeName = startingNodeName.split(":");
         String[] fullnodeAddr = startingNodeAddress.split(":");
@@ -195,7 +284,7 @@ public class FullNode implements FullNodeInterface {
             selfClient = new Socket(host, Integer.parseInt(port));
             BufferedReader reader = new BufferedReader(new InputStreamReader(selfClient.getInputStream()));
             String response = reader.readLine();
-            System.out.println(fullnodeName[0] + " replied: " + response); // This will print out the fullnodes start message to us
+            System.out.println(fullnodeName[0] + " replied: " + response); // this will print out the fullnodes start message to us
 
             if(response.startsWith("START")){
                 System.out.println("Connection established!");
@@ -251,13 +340,13 @@ public class FullNode implements FullNodeInterface {
             writer.flush();
             System.out.println("====PUT message sent!=====\n");
 
-            // Handling the response
+            // handling the response
             String serverResponse = reader.readLine();
             System.out.println("Server replied: " + serverResponse);
             if(serverResponse.startsWith("SUCCESS")){
                 return true;
             }
-            else if(serverResponse.startsWith("FAILED")){ // Try to store in node closest to hash
+            else if(serverResponse.startsWith("FAILED")){ // try to store in node closest to hash
                 System.out.println("\nValue could not be stored here, checking closest nodes to hashed key...");
                 String nodeHashID = hash(key);
                 writer.write("NEAREST? " + nodeHashID + "\n");
@@ -265,7 +354,7 @@ public class FullNode implements FullNodeInterface {
                 System.out.println("NEAREST? " + nodeHashID + "\n");
                 System.out.println("====NEAREST message sent!====\n");
 
-                // Read the response and store it in a string
+                // read the response and store it in a string
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
                 for (int i = 0; i < 7; i++){
@@ -277,34 +366,33 @@ public class FullNode implements FullNodeInterface {
                 }
                 String nearestResponseString = nearestResponse.toString();
                 System.out.println(nearestResponse.toString());
-                System.out.println("Reached");
 
-                // Split the response string of nearest command
+                // split the response string of nearest command
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
                 String currentAddress = null;
 
-                // For each line in the NEAREST? response extract the names and addresses
+                // for each line in the NEAREST? response extract the names and addresses
                 for (String nearestResponseLine : responseLines) {
-                    // Skip lines that are not necessary
+                    // skip lines that are not necessary
                     if (nearestResponseLine.startsWith("NODES")) {
                         nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
                         System.out.println(nodesCount + " Full nodes found, sending each one a PUT?");
                         continue;
                     }
                     if (nodesCount < 1) {
-                        break; // Break out of the loop if we have parsed and acted on all nodes
+                        break; // break out of the loop if we have parsed and acted on all nodes
                     }
-                    //Parse each of the names and addresses to connect to and send a PUT?
+                    // parse each of the names and addresses to connect to and send a PUT?
                     if (currentName == null) {
                         currentName = nearestResponseLine;
                         System.out.println("Name: " + currentName);
                     } else {
                         currentAddress = nearestResponseLine;
                         System.out.println("IP Address: " + currentAddress);
-                        // Send the start command to connect then send a GET?
-                        this.start(currentName, currentAddress); // Connect to the node
+                        // send the start command to connect then send a GET?
+                        this.start(currentName, currentAddress); // connect to the node
                         System.out.println("\nSending a PUT? message to the server...\n" + message);
                         writer.write(message);
                         writer.flush();
@@ -321,7 +409,7 @@ public class FullNode implements FullNodeInterface {
                             System.out.println("Server replied: " + serverResponse);
                             System.out.println("Wrong PUT? format?");
                         }
-                        // Reset name and IP for the next node to parse and connect to and decrement count
+                        // reset name and IP for the next node to parse and connect to and decrement count
                         currentName = null;
                         currentAddress = null;
                         nodesCount--;
@@ -369,7 +457,7 @@ public class FullNode implements FullNodeInterface {
             writer.flush();
             System.out.println("\nWaiting for server response...\n");
 
-            // Handling the response if NOPE
+            // handling the response if NOPE
             String serverResponse = reader.readLine();
             System.out.println("Server replied: " + serverResponse);
             if (serverResponse.equals("NOPE")) {
@@ -380,7 +468,7 @@ public class FullNode implements FullNodeInterface {
                 System.out.println("NEAREST? " + nodeHashID + "\n");
                 System.out.println("====NEAREST message sent!====\n");
 
-                // Read the response and store it in a string
+                // read the response and store it in a string
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
                 for (int i = 0; i < 7; i++){
@@ -394,15 +482,15 @@ public class FullNode implements FullNodeInterface {
                 String nearestResponseString = nearestResponse.toString();
                 System.out.println(nearestResponse.toString());
 
-                // Split the response string of nearest command
+                // split the response string of nearest command
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
                 String currentAddress = null;
 
-                // For each line in the NEAREST? response extract the names and addresses
+                // for each line in the NEAREST? response extract the names and addresses
                 for (String nearestResponseLine : responseLines) {
-                    // Skip lines that are not necessary
+                    // skip lines that are not necessary
                     if (nearestResponseLine.startsWith("NODES")) {
                         nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
                         System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
@@ -419,9 +507,9 @@ public class FullNode implements FullNodeInterface {
                     }
 
                     if (nodesCount < 1 || found) {
-                        break; // Break out of the loop if we have parsed and acted on all nodes
+                        break; // break out of the loop if we have parsed and acted on all nodes
                     }
-                    //Parse each of the names and addresses to connect to and send a GET?
+                    // parse each of the names and addresses to connect to and send a GET?
                     if (currentName == null) {
                         currentName = nearestResponseLine;
                         System.out.println("Name: " + currentName);
@@ -429,7 +517,7 @@ public class FullNode implements FullNodeInterface {
                     else {
                         currentAddress = nearestResponseLine;
                         System.out.println("IP Address: " + currentAddress);
-                        // Send the start command to connect then send a GET?
+                        // send the start command to connect then send a GET?
                         this.start(currentName, currentAddress); // Connect to the node
                         System.out.println("Sending a GET? message to the server...\n" + message + "test");
                         writer.write(message);
@@ -437,7 +525,7 @@ public class FullNode implements FullNodeInterface {
                         writer.flush();
                         System.out.println("\nWaiting for server response...\n");
 
-                        if (serverResponse.startsWith("VALUE")) { // This time we read from the main stream
+                        if (serverResponse.startsWith("VALUE")) { // this time we read from the main stream
                             found = true;
                             System.out.println("Server replied: " + serverResponse);
                             String[] extractLineAmount = serverResponse.split(" ");
@@ -462,7 +550,7 @@ public class FullNode implements FullNodeInterface {
                             System.out.println("Server replied: " + serverResponse);
                             System.out.println("Wrong GET? format?");
                         }
-                        // Reset name and IP for the next node to parse and connect to and decrement count
+                        // reset name and IP for the next node to parse and connect to and decrement count
                         currentName = null;
                         currentAddress = null;
                         nodesCount--;

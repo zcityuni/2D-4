@@ -32,7 +32,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
     public boolean start(String startingNodeName, String startingNodeAddress) throws IOException {
 
-        // These are the details of the node we are connecting to
+        // these are the details of the node we are connecting to
         name = startingNodeName;
         String[] fullnodeName = startingNodeName.split(":");
         String[] fullnodeAddr = startingNodeAddress.split(":");
@@ -47,11 +47,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
             clientSocket = new Socket(host, Integer.parseInt(port));
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
-            System.out.println(fullnodeName[0] + " replied: " + response); // This will print out the fullnodes start message to us
+            System.out.println(fullnodeName[0] + " replied: " + response); // this will print out the fullnodes start message to us
 
             if(response.startsWith("START")){
                 System.out.println("Connection established!");
-                // Send the full node our start message
+                // send the full node our start message
                 Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
                 System.out.println("\nSending a START message to the server...\n");
                 String myNode = "addf081@city.ac.uk:TempNodeZ123";
@@ -103,13 +103,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
             writer.flush();
             System.out.println("====PUT message sent!=====\n");
 
-            // Handling the response
+            // handling the response
             String serverResponse = reader.readLine();
             System.out.println("Server replied: " + serverResponse);
             if(serverResponse.startsWith("SUCCESS")){
                 return true;
             }
-            else if(serverResponse.startsWith("FAILED")){ // Try to store in node closest to hash
+            else if(serverResponse.startsWith("FAILED")){ // try to store in node closest to hash
                 System.out.println("\nValue could not be stored here, checking closest nodes to hashed key...");
                 String nodeHashID = hash(key);
                 writer.write("NEAREST? " + nodeHashID + "\n");
@@ -117,7 +117,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 System.out.println("NEAREST? " + nodeHashID + "\n");
                 System.out.println("====NEAREST message sent!====\n");
 
-                // Read the response and store it in a string
+                // read the response and store it in a string
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
                 for (int i = 0; i < 7; i++){
@@ -129,34 +129,33 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 }
                 String nearestResponseString = nearestResponse.toString();
                 System.out.println(nearestResponse.toString());
-                System.out.println("Reached");
 
-                // Split the response string of nearest command
+                // split the response string of nearest command
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
                 String currentAddress = null;
 
-                // For each line in the NEAREST? response extract the names and addresses
+                // for each line in the NEAREST? response extract the names and addresses
                 for (String nearestResponseLine : responseLines) {
-                    // Skip lines that are not necessary
+                    // skip lines that are not necessary
                     if (nearestResponseLine.startsWith("NODES")) {
                         nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
                         System.out.println(nodesCount + " Full nodes found, sending each one a PUT?");
                         continue;
                     }
                     if (nodesCount < 1) {
-                        break; // Break out of the loop if we have parsed and acted on all nodes
+                        break; // break out of the loop if we have parsed and acted on all nodes
                     }
-                    //Parse each of the names and addresses to connect to and send a PUT?
+                    // parse each of the names and addresses to connect to and send a PUT?
                     if (currentName == null) {
                         currentName = nearestResponseLine;
                         System.out.println("Name: " + currentName);
                     } else {
                         currentAddress = nearestResponseLine;
                         System.out.println("IP Address: " + currentAddress);
-                        // Send the start command to connect then send a GET?
-                        this.start(currentName, currentAddress); // Connect to the node
+                        // send the start command to connect then send a GET?
+                        this.start(currentName, currentAddress); // connect to the node
                         System.out.println("\nSending a PUT? message to the server...\n" + message);
                         writer.write(message);
                         writer.flush();
@@ -173,7 +172,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("Server replied: " + serverResponse);
                             System.out.println("Wrong PUT? format?");
                         }
-                        // Reset name and IP for the next node to parse and connect to and decrement count
+                        // reset name and IP for the next node to parse and connect to and decrement count
                         currentName = null;
                         currentAddress = null;
                         nodesCount--;
@@ -221,7 +220,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             writer.flush();
             System.out.println("\nWaiting for server response...\n");
 
-            // Handling the response if NOPE
+            // handling the response if NOPE
             String serverResponse = reader.readLine();
             System.out.println("Server replied: " + serverResponse);
             if (serverResponse.equals("NOPE")) {
@@ -232,7 +231,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 System.out.println("NEAREST? " + nodeHashID + "\n");
                 System.out.println("====NEAREST message sent!====\n");
 
-                // Read the response and store it in a string
+                // read the response and store it in a string
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
                 for (int i = 0; i < 7; i++){
@@ -246,15 +245,15 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 String nearestResponseString = nearestResponse.toString();
                 System.out.println(nearestResponse.toString());
 
-                // Split the response string of nearest command
+                // split the response string of nearest command
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
                 String currentAddress = null;
 
-                // For each line in the NEAREST? response extract the names and addresses
+                // for each line in the NEAREST? response extract the names and addresses
                 for (String nearestResponseLine : responseLines) {
-                    // Skip lines that are not necessary
+                    // skip lines that are not necessary
                     if (nearestResponseLine.startsWith("NODES")) {
                         nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
                         System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
@@ -271,9 +270,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     }
 
                     if (nodesCount < 1 || found) {
-                        break; // Break out of the loop if we have parsed and acted on all nodes
+                        break; // break out of the loop if we have parsed and acted on all nodes
                     }
-                    //Parse each of the names and addresses to connect to and send a GET?
+                    // parse each of the names and addresses to connect to and send a GET?
                     if (currentName == null) {
                         currentName = nearestResponseLine;
                         System.out.println("Name: " + currentName);
@@ -281,15 +280,15 @@ public class TemporaryNode implements TemporaryNodeInterface {
                     else {
                         currentAddress = nearestResponseLine;
                         System.out.println("IP Address: " + currentAddress);
-                        // Send the start command to connect then send a GET?
-                        this.start(currentName, currentAddress); // Connect to the node
+                        // send the start command to connect then send a GET?
+                        this.start(currentName, currentAddress); // connect to the node
                         System.out.println("Sending a GET? message to the server...\n" + message + "test");
                         writer.write(message);
                         System.out.println("====GET message sent!====\n");
                         writer.flush();
                         System.out.println("\nWaiting for server response...\n");
 
-                        if (serverResponse.startsWith("VALUE")) { // This time we read from the main stream
+                        if (serverResponse.startsWith("VALUE")) { // this time we read from the main stream
                             found = true;
                             System.out.println("Server replied: " + serverResponse);
                             String[] extractLineAmount = serverResponse.split(" ");
@@ -314,7 +313,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println("Server replied: " + serverResponse);
                             System.out.println("Wrong GET? format?");
                         }
-                        // Reset name and IP for the next node to parse and connect to and decrement count
+                        // reset name and IP for the next node to parse and connect to and decrement count
                         currentName = null;
                         currentAddress = null;
                         nodesCount--;
