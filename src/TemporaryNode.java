@@ -232,6 +232,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 String responseLine;
                 while ((responseLine = reader.readLine()) != null) {
                     nearestResponse.append(responseLine);
+                    System.out.println(responseLine);
+                    boolean bool = responseLine != null;
+                    System.out.println(bool);
                     if(responseLine.isEmpty()){
                         break;
                     }
