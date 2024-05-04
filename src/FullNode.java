@@ -296,12 +296,16 @@ public class FullNode implements FullNodeInterface {
                 value.append(valueResponseLine).append("\n");
             }
 
-            String hashID = hash(key.toString());
-            List<String[]> nearestNodes = getClosestNodes(hashID);
+            String keyHashID = hash(key.toString());
+            String myHashID = hash(selfName);
+            List<String[]> nearestNodes = getClosestNodes(keyHashID);
+            nearestNodes.removeIf(node -> Arrays.asList(node).contains(null)); // remove null elements
             int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
             for (String[] node : nearestNodes) {
                 String nodeHashID = hash(node[0]);
-                if(hashID.equals(nodeHashID)){
+                System.out.println("key  hashid: " + keyHashID);
+                System.out.println("closest nodes: " +nodeHashID);
+                if(nodeHashID.equals(myHashID)){
                     writer.write("SUCCESS\n");
                     writer.flush();
                     valueMap.put(key.toString(), value.toString());
@@ -322,14 +326,17 @@ public class FullNode implements FullNodeInterface {
             List<String[]> nearestNodes = getClosestNodes(hashID);
             nearestNodes.removeIf(node -> Arrays.asList(node).contains(null)); // remove null elements
             // print out the nearest nodes names and addresses for the hash
+            StringBuilder message = new StringBuilder();
+            int nodeCount = 0;
             for (String[] node : nearestNodes) {
                 String nodeName = node[0];
                 String nodeAddress = node[1];
-                System.out.println("Node Name: " + nodeName);
-                System.out.println("Node IP: " + nodeAddress);
-                System.out.println();
+                message.append(nodeName + "\n" + nodeAddress + "\n");
+                nodeCount++;
             }
             // write it to the writer
+            writer.write("NODES " + nodeCount + "\n" + message.toString());
+            writer.flush();
         }
         else if(request.startsWith("NOTIFY?")){
             // record the name given in our network map and respond with notified if appropriate (passive mapping)
