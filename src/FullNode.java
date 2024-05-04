@@ -321,7 +321,6 @@ public class FullNode implements FullNodeInterface {
         }
         else if(request.startsWith("NEAREST?")){
             // respond with 3 closest nodes to tha requesters provided hashID
-            System.out.println("reached");
             String[] nearestResponse = request.split(" ");
             String hashID = nearestResponse[1];
             System.out.println("Nearest nodes: ");
