@@ -232,7 +232,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 String responseLine;
                 for (int i = 0; i < 7; i++){
                     responseLine = reader.readLine();
-                    nearestResponse.append(responseLine);
+                    nearestResponse.append(responseLine).append("\n");
                     if(responseLine.isBlank()){
                         break;
                     }
