@@ -237,7 +237,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 // Split the response string of nearest command
                 String nearestResponseString = nearestResponse.toString();
                 String[] responseLines = nearestResponseString.split("\\r?\\n");
-
+                System.out.println("Reached\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
                 String currentAddress = null;
