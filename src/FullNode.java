@@ -54,7 +54,7 @@ public class FullNode implements FullNodeInterface {
                 while (true) {
                     try {
                         connectedClient = serverSocket.accept();
-                        System.out.println("Connected to: " + connectedClient.getInetAddress().toString());
+                        System.out.println("\nClient has connected: " + host.toString() + ":" + port + "\n" + name + "\n");
                         new Thread(() -> {
                             try {
                                 BufferedReader reader = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
@@ -135,7 +135,6 @@ public class FullNode implements FullNodeInterface {
             writer.write("NOTIFY? \n");
             writer.write(selfName + " \n");
             writer.write(selfAddress + "\n");
-            response = reader.readLine();
             System.out.println("Server replied: " + response);
 
             System.out.println("Sending a nearest request to actively map nodes...\n");
