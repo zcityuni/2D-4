@@ -73,3 +73,5 @@ martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20002
 10.200.51.65 20002
 
 All of the same tests should work.
+
+https://pastebin.com/q58kMF7e
