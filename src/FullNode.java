@@ -32,8 +32,6 @@ public class FullNode implements FullNodeInterface {
     private InetAddress host;
     private String IPAddr;
     private String name;
-
-    // 127.0.0.1:2244
     public FullNode(){
         networkMap = new HashMap<>();
         valueMap = new HashMap<>();
@@ -53,42 +51,45 @@ public class FullNode implements FullNodeInterface {
             networkMap.put(0, List.of(new String[][] {new String[] {selfName, selfAddress}}));
 
             // multithread to allow multiple connections and handle each one at same time
-            while (true) {
-                try {
-                    clientSocket[0] = serverSocket.accept(); // Assign to array element
-                    new Thread(() -> {
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        clientSocket[0] = serverSocket.accept();
                         System.out.println("Connected to: " + clientSocket[0].getInetAddress().toString());
-                        try {
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket[0].getInputStream()));
-                            Writer writer = new OutputStreamWriter(clientSocket[0].getOutputStream());
-                            System.out.println("\nSending a START message to the server...\n");
-                            writer.write("START 1 " + selfName + "\n");
-                            writer.flush();
-                            System.out.println("START 1 " + selfName);
-                            System.out.println("====START message sent!====\n");
+                        new Thread(() -> {
+                            try {
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket[0].getInputStream()));
+                                Writer writer = new OutputStreamWriter(clientSocket[0].getOutputStream());
+                                System.out.println("\nSending a START message to the server...\n");
+                                writer.write("START 1 " + selfName + "\n");
+                                writer.flush();
+                                System.out.println("START 1 " + selfName);
+                                System.out.println("====START message sent!====\n");
 
-                            String response = reader.readLine();
-                            if(response.startsWith("START")){
-                                System.out.println("Connection established!");
-                            } else{
-                                end("Invalid connection", clientSocket[0]);
+                                String response = reader.readLine();
+                                if(response.startsWith("START")){
+                                    System.out.println("Connection established!");
+                                    processClientRequests(clientSocket[0]);
+                                } else{
+                                    end("Invalid connection", clientSocket[0]);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
                             }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                        // repond to commmands from clients
+                        }).start();
+
+                    } catch (IOException e) {
+                        System.out.println("Failed to accept client connection");
                         try {
-                            processClientRequests(clientSocket[0]);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
+                            end("Connection failed", clientSocket[0]);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
                         }
-                    }).start();
-                    return true;
-                } catch (IOException e) {
-                    System.out.println("Failed to accept client connection");
-                    end("Connection failed", clientSocket[0]);
+                    }
                 }
-            }
+            }).start();
         } catch (IOException e) {
             System.out.println("Failed to open server socket");
             if (clientSocket[0] != null) {
@@ -97,6 +98,7 @@ public class FullNode implements FullNodeInterface {
             serverSocket.close();
             return false;
         }
+        return false;
     }
 
     public void handleIncomingConnections(String startingNodeName, String startingNodeAddress) throws IOException {
@@ -189,7 +191,6 @@ public class FullNode implements FullNodeInterface {
                     nodesCount--;
                 }
             }
-
         } catch (IOException e){
             System.out.println(e.toString());
             end("START failed", selfClient);
