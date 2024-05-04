@@ -381,7 +381,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         writer.write("NEAREST? " + hashID);
         writer.flush();
-
+        /*
         // read the response and store it in a string
         StringBuilder nearestResponse = new StringBuilder();
         String responseLine;
@@ -436,7 +436,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 currentAddress = null;
                 nodesCount--;
             }
-        }
+        }*/
         return true;
     }
 
