@@ -231,11 +231,12 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
                 while ((responseLine = reader.readLine()) != null) {
-                    nearestResponse.append(responseLine);
+                    nearestResponse.append(responseLine).append("\n");
                 }
 
                 // Split the response string of nearest command
                 String nearestResponseString = nearestResponse.toString();
+                nearestResponse.setLength(0);
                 System.out.println(nearestResponseString);
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
