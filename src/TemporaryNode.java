@@ -232,16 +232,15 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 String responseLine;
                 while ((responseLine = reader.readLine()) != null) {
                     nearestResponse.append(responseLine);
-                    System.out.println(responseLine);
-                    if(responseLine == null){
+                    if(nearestResponse.length() >= 7){
                         break;
                     }
                 }
-                System.out.println("reached");
+                System.out.println(nearestResponse.toString());
+                System.out.println("Reached");
 
                 // Split the response string of nearest command
                 String nearestResponseString = nearestResponse.toString();
-                System.out.println(nearestResponseString);
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
