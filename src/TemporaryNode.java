@@ -363,11 +363,13 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
     public boolean echo() throws IOException {
         try{
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             System.out.println("\nSending an ECHO message to the server...\n");
             writer.write("ECHO?\n");
             writer.flush();
-
+            String response = reader.readLine();
+            System.out.println("Server replied: " + response);
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
@@ -378,14 +380,10 @@ public class TemporaryNode implements TemporaryNodeInterface {
 
     public void end(String reason) throws IOException {
         try{
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             writer.write("END " + reason + "\n");
             String message = writer.toString();
             writer.flush();
-
-            String response = reader.readLine();
-            System.out.println("Server replied: " + response);
             clientSocket.close();
         } catch(IOException e){
             System.out.println(e.toString());
