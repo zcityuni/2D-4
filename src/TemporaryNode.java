@@ -120,14 +120,19 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 // Read the response and store it in a string
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
-                while ((responseLine = reader.readLine()) != null) {
+                for (int i = 0; i < 7; i++){
+                    responseLine = reader.readLine();
                     nearestResponse.append(responseLine).append("\n");
+                    if(responseLine.isBlank()){
+                        break;
+                    }
                 }
+                String nearestResponseString = nearestResponse.toString();
+                System.out.println(nearestResponse.toString());
+                System.out.println("Reached");
 
                 // Split the response string of nearest command
-                String nearestResponseString = nearestResponse.toString();
-                String[] responseLines = nearestResponseString.split("\\r?\\n");
-
+                String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
                 String currentAddress = null;
@@ -161,11 +166,11 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         if(serverResponse.startsWith("SUCCESS")){
                             stored = true;
                             return true;
-                        } else if (responseLine.startsWith("FAILED")) {
-                            System.out.println("Server replied: " + responseLine);
+                        } else if (serverResponse.startsWith("FAILED")) {
+                            System.out.println("Server replied: " + serverResponse);
                             System.out.println("Value could not be stored at this node.");
                         } else {
-                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Server replied: " + serverResponse);
                             System.out.println("Wrong PUT? format?");
                         }
                         // Reset name and IP for the next node to parse and connect to and decrement count
@@ -210,7 +215,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             for (String line : keyLines) {
                 message += line + "\n";
             }
-            System.out.println("Sending a GET? message to the server...\n" + message + "test");
+            System.out.println("Sending a GET? message to the server...\n" + message);
             writer.write(message);
             System.out.println("====GET message sent!====\n");
             writer.flush();
@@ -237,9 +242,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         break;
                     }
                 }
+                System.out.println("Server replied:");
                 String nearestResponseString = nearestResponse.toString();
                 System.out.println(nearestResponse.toString());
-                System.out.println("Reached");
 
                 // Split the response string of nearest command
                 String[] responseLines = nearestResponseString.split("\\n");
@@ -287,13 +292,19 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         if (serverResponse.startsWith("VALUE")) { // This time we read from the main stream
                             found = true;
                             System.out.println("Server replied: " + serverResponse);
-                            StringBuilder response = new StringBuilder();
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                response.append(line).append("\n");
+                            String[] extractLineAmount = serverResponse.split(" ");
+                            int lineAmount = Integer.parseInt(extractLineAmount[1]);
+                            StringBuilder valueResponse = new StringBuilder();
+                            String valueResponseLine;
+                            for (int i = 0; i < lineAmount; i++){
+                                valueResponseLine = reader.readLine();
+                                valueResponse.append(valueResponseLine).append("\n");
+                                if(valueResponseLine.isBlank()){
+                                    break;
+                                }
                             }
-                            System.out.println(response.toString());
-                            return response.toString();
+                            System.out.println(valueResponse.toString());
+                            return valueResponse.toString();
                         }
                         else if (serverResponse.startsWith("NOPE")) {
                             System.out.println("Server replied: " + serverResponse);
@@ -312,14 +323,20 @@ public class TemporaryNode implements TemporaryNodeInterface {
             }
             else if(serverResponse.startsWith("VALUE")){
                 found = true;
-                System.out.println("\n Server Says:\n");
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line).append("\n");
+                System.out.println("Server replied: " + serverResponse);
+                String[] extractLineAmount = serverResponse.split(" ");
+                int lineAmount = Integer.parseInt(extractLineAmount[1]);
+                StringBuilder valueResponse = new StringBuilder();
+                String valueResponseLine;
+                for (int i = 0; i < lineAmount; i++){
+                    valueResponseLine = reader.readLine();
+                    valueResponse.append(valueResponseLine).append("\n");
+                    if(valueResponseLine.isBlank()){
+                        break;
+                    }
                 }
-                System.out.println(response.toString());
-                return response.toString();
+                System.out.println(valueResponse.toString());
+                return valueResponse.toString();
             }
         } catch(IOException e){
             System.out.println(e.toString());
