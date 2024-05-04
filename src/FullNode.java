@@ -138,9 +138,63 @@ public class FullNode implements FullNodeInterface {
             response = reader.readLine();
             System.out.println("Server replied: " + response);
 
+            System.out.println("Sending a nearest request to actively map nodes...\n");
+            String nodeHashID = hash(selfName);
+            writer.write("NEAREST? " + nodeHashID + "\n");
+            writer.flush();
+            System.out.println("NEAREST? " + nodeHashID + "\n");
+            System.out.println("====NEAREST message sent!====\n");
+
+            // read the response and store it in a string
+            StringBuilder nearestResponse = new StringBuilder();
+            String responseLine;
+            for (int i = 0; i < 7; i++){
+                responseLine = reader.readLine();
+                nearestResponse.append(responseLine).append("\n");
+                if(responseLine.isBlank()){
+                    break;
+                }
+            }
+            String nearestResponseString = nearestResponse.toString();
+            System.out.println(nearestResponse.toString());
+
+            // split the response string of nearest command
+            String[] responseLines = nearestResponseString.split("\\n");
+            int nodesCount = 0; // so we know when to stop
+            String currentName = null;
+            String currentAddress = null;
+
+            // for each line in the NEAREST? response extract the names and addresses
+            for (String nearestResponseLine : responseLines) {
+                if (nearestResponseLine.startsWith("NODES")) {
+                    nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
+                    System.out.println(nodesCount + " Full nodes found, sending each one a PUT?");
+                    continue;
+                }
+                if (nodesCount < 1) {
+                    break; // break out of the loop if we have parsed and acted on all nodes
+                }
+                // parse each of the names and addresses to connect to and send a PUT?
+                if (currentName == null) {
+                    currentName = nearestResponseLine;
+                    System.out.println("Name: " + currentName);
+                } else {
+                    currentAddress = nearestResponseLine;
+                    System.out.println("IP Address: " + currentAddress);
+                    // send the start command to connect then send a GET?
+                    //this.start(currentName, currentAddress); // connect to the node
+                    // reset name and IP for the next node to parse and connect to and decrement count
+                    currentName = null;
+                    currentAddress = null;
+                    nodesCount--;
+                }
+            }
+
         } catch (IOException e){
             System.out.println(e.toString());
             end("START failed", selfClient);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -375,7 +429,6 @@ public class FullNode implements FullNodeInterface {
 
                 // for each line in the NEAREST? response extract the names and addresses
                 for (String nearestResponseLine : responseLines) {
-                    // skip lines that are not necessary
                     if (nearestResponseLine.startsWith("NODES")) {
                         nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
                         System.out.println(nodesCount + " Full nodes found, sending each one a PUT?");
