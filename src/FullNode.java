@@ -180,6 +180,12 @@ public class FullNode implements FullNodeInterface {
                     System.out.println("Skipping the same node we are connected to...");
                     continue;
                 }
+                if (nearestResponseLine.startsWith(selfAddress)) {
+                    nodesCount--;
+                    System.out.println("Decreasing remaining node count to: " + nodesCount + "\n");
+                    continue;
+                }
+
                 if (nodesCount < 1) {
                     break; // break out of the loop if we have parsed and acted on all nodes
                 }
