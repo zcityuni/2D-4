@@ -332,8 +332,12 @@ public class FullNode implements FullNodeInterface {
             for (String[] node : nearestNodes) {
                 String nodeName = node[0];
                 String nodeAddress = node[1];
-                message.append(nodeName + "\n" + nodeAddress + "\n");
-                nodeCount++;
+                if(nodeName == null || nodeAddress == null){
+                    continue;
+                } else{
+                    message.append(nodeName).append("\n").append(nodeAddress).append("\n");
+                    nodeCount++;
+                }
             }
             // write it to the writer
             writer.write("NODES " + nodeCount + "\n" + message.toString());
