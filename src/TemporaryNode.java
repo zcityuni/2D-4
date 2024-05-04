@@ -378,8 +378,65 @@ public class TemporaryNode implements TemporaryNodeInterface {
     public boolean sendNearest(String name) throws Exception {
         String hashID = hash(name);
         Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+        BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         writer.write("NEAREST? " + hashID);
         writer.flush();
+
+        // read the response and store it in a string
+        StringBuilder nearestResponse = new StringBuilder();
+        String responseLine;
+        for (int i = 0; i < 7; i++){
+            responseLine = reader.readLine();
+            nearestResponse.append(responseLine).append("\n");
+            if(responseLine.isBlank()){
+                break;
+            }
+        }
+        System.out.println("Server replied:");
+        String nearestResponseString = nearestResponse.toString();
+        System.out.println(nearestResponse.toString());
+
+        // split the response string of nearest command
+        String[] responseLines = nearestResponseString.split("\\n");
+        int nodesCount = 0; // so we know when to stop
+        String currentName = null;
+        String currentAddress = null;
+
+        // for each line in the NEAREST? response extract the names and addresses
+        for (String nearestResponseLine : responseLines) {
+            // skip lines that are not necessary
+            if (nearestResponseLine.startsWith("NODES")) {
+                nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
+                System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
+                continue;
+            }
+            if (nearestResponseLine.startsWith(name)) {
+                System.out.println("Skipping the same node we are connected to...");
+                continue;
+            }
+            if (nearestResponseLine.startsWith(IPAddr)) {
+                nodesCount--;
+                System.out.println("Decreasing remaining node count to: " + nodesCount + "\n");
+                continue;
+            }
+
+            if (nodesCount < 1) {
+                break; // break out of the loop if we have parsed and acted on all nodes
+            }
+            // parse each of the names and addresses to connect to and send a GET?
+            if (currentName == null) {
+                currentName = nearestResponseLine;
+                System.out.println("Name: " + currentName);
+            }
+            else {
+                currentAddress = nearestResponseLine;
+                System.out.println("IP Address: " + currentAddress);
+                // reset name and IP for the next node to parse and connect to and decrement count
+                currentName = null;
+                currentAddress = null;
+                nodesCount--;
+            }
+        }
         return true;
     }
 
