@@ -380,7 +380,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
         Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
         writer.write("NEAREST? " + hashID);
         writer.flush();
-        return false;
+        return true;
     }
 
     public void end(String reason) throws IOException {
