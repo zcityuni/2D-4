@@ -303,8 +303,9 @@ public class FullNode implements FullNodeInterface {
             int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
             for (String[] node : nearestNodes) {
                 String nodeHashID = hash(node[0]);
-                System.out.println("key  hashid: " + keyHashID);
-                System.out.println("closest nodes: " +nodeHashID);
+                System.out.println("key hashid: " + keyHashID);
+                System.out.println("closest nodes: " + nodeHashID);
+                System.out.println("my hashid: " + myHashID);
                 if(nodeHashID.equals(myHashID)){
                     writer.write("SUCCESS\n");
                     writer.flush();
