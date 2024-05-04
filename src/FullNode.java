@@ -191,6 +191,7 @@ public class FullNode implements FullNodeInterface {
                     System.out.println("Sending a NOTIFY? message to add myself to the network map...");
                     writer.write(notifyMessage);
                     writer.flush();
+                    response = reader.readLine();
                     System.out.println("Server replied: " + response);
 
                     // get distance by comparing hashID of our name to hashID of their name
