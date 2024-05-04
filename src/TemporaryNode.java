@@ -7,9 +7,7 @@
 // zakariyya.chawdhury@city.ac.uk
 
 import java.io.*;
-import java.math.BigInteger;
 import java.net.*;
-import java.util.Arrays;
 
 // DO NOT EDIT starts
 interface TemporaryNodeInterface {
@@ -375,6 +373,14 @@ public class TemporaryNode implements TemporaryNodeInterface {
             end("ECHO FAILED");
             return false;
         }
+    }
+
+    public boolean sendNearest(String name) throws Exception {
+        String hashID = hash(name);
+        Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+        writer.write("NEAREST? " + hashID);
+        writer.flush();
+        return false;
     }
 
     public void end(String reason) throws IOException {

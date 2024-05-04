@@ -33,6 +33,7 @@ public class FullNode implements FullNodeInterface {
     private InetAddress host;
     private String IPAddr;
     private String name;
+    private List<String[]> nearestNodes;
     public FullNode(){
         networkMap = new HashMap<>();
         valueMap = new HashMap<>();
@@ -54,7 +55,7 @@ public class FullNode implements FullNodeInterface {
                 while (true) {
                     try {
                         connectedClient = serverSocket.accept();
-                        System.out.println("\nClient has connected: " + host.toString() + ":" + port + "\n" + name + "\n");
+                        System.out.println("\nClient has connected: " + connectedClient.getInetAddress());
                         new Thread(() -> {
                             try {
                                 BufferedReader reader = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
@@ -163,6 +164,9 @@ public class FullNode implements FullNodeInterface {
             int nodesCount = 0; // so we know when to stop
             String currentName = null;
             String currentAddress = null;
+            // details of nodes to add to my own network map
+            String nameToSave = null;
+            String IPAddrToSave = null;
 
             // for each line in the NEAREST? response extract the names and addresses
             for (String nearestResponseLine : responseLines) {
@@ -178,17 +182,27 @@ public class FullNode implements FullNodeInterface {
                 if (currentName == null) {
                     currentName = nearestResponseLine;
                     System.out.println("Name: " + currentName);
+                    nameToSave = currentName;
                 } else {
                     currentAddress = nearestResponseLine;
+                    IPAddrToSave = currentAddress;
                     System.out.println("IP Address: " + currentAddress);
                     this.start(currentName, currentAddress); // connect to the node and send NOTIFY?
                     System.out.println("Sending a NOTIFY? message to add myself to the network map...");
                     writer.write(notifyMessage);
                     writer.flush();
                     System.out.println("Server replied: " + response);
+
+                    // get distance by comparing hashID of our name to hashID of their name
+                    String hashID = hash(nameToSave);
+                    int distance = calculateHashIDDistance(hash(selfName), hashID);
+                    // store in our map at that distance
+                    networkMap.put(distance, List.of(new String[][] {new String[] {nameToSave, IPAddrToSave}}));
                     // reset name and IP for the next node to parse and connect to and decrement count
                     currentName = null;
                     currentAddress = null;
+                    nameToSave = null;
+                    IPAddrToSave = null;
                     nodesCount--;
                 }
             }
@@ -215,18 +229,87 @@ public class FullNode implements FullNodeInterface {
             System.out.println("Echoed back!");
         }
         else if(request.startsWith("GET?")){
-            // handle a GET request by looking up the key in our table
+            // handle a GET? request by looking up the key in our table
+            if(valueMap.size() < 1){
+                writer.write("NOPE\n");
+                writer.flush();
+            }
 
+            String[] getResponse = request.split("\\n");
+            String firstLine = getResponse[0];
+            String[] splitFirstLine = firstLine.split(" ");
+            int keyLength = Integer.parseInt(splitFirstLine[1]);
+
+            StringBuilder key = new StringBuilder();
+            String keyResponseLine;
+            for (int i = 0; i < keyLength; i++){
+                keyResponseLine = reader.readLine();
+                key.append(keyResponseLine).append("\n");
+            }
+
+            String value = valueMap.get(key.toString());
+            if(value == null){
+                writer.write("NOPE\n");
+                writer.flush();
+            }
+            else{
+                String[] splitValue = value.split("\\n");
+                int valueLength = splitValue.length;
+
+                StringBuilder message = new StringBuilder();
+                message.append("VALUE ").append(keyLength).append(" ").append(valueLength).append("\n");
+                writer.write(message.toString());
+                writer.flush();
+                System.out.println("Sent back found value");
+            }
         }
         else if(request.startsWith("PUT?")){
-            // handle a PUT request by seeing if we are close enough to keys hashID store it
+            // handle a PUT? request by seeing if we are close enough to keys hashID store it
+            String[] putResponse = request.split("\\n");
+            String firstLine = putResponse[0];
+            String[] splitFirstLine = firstLine.split(" ");
+            int keyLength = Integer.parseInt(splitFirstLine[1]);
+            int valueLength = Integer.parseInt(splitFirstLine[2]);
 
+            StringBuilder key = new StringBuilder();
+            String keyResponseLine;
+            for (int i = 0; i < keyLength; i++){
+                keyResponseLine = reader.readLine();
+                key.append(keyResponseLine).append("\n");
+            }
+
+            StringBuilder value = new StringBuilder();
+            String valueResponseLine;
+            for (int i = 0; i < valueLength; i++){
+                valueResponseLine = reader.readLine();
+                value.append(valueResponseLine).append("\n");
+            }
+
+            String hashID = hash(key.toString());
+            List<String[]> nearestNodes = getClosestNodes(hashID);
+            int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
+            for (String[] node : nearestNodes) {
+                String nodeHashID = hash(node[0]);
+                if(hashID.equals(nodeHashID)){
+                    writer.write("SUCCESS\n");
+                    writer.flush();
+                    valueMap.put(key.toString(), value.toString());
+                    System.out.println("Stored item in value hashmap\n");
+                    break;
+                }
+                count++;
+            }
+            if(count >= nearestNodes.size()){
+                writer.write("FAILED\n");
+                writer.flush();
+            }
         }
         else if(request.startsWith("NEAREST?")){
             // respond with 3 closest nodes to tha requesters provided hashID
             String[] nearestResponse = request.split(" ");
             String hashID = nearestResponse[1];
-            List<String[]> nearestNodes = respondToNearest(hashID);
+            List<String[]> nearestNodes = getClosestNodes(hashID);
+            nearestNodes.removeIf(node -> Arrays.asList(node).contains(null)); // remove null elements
             // print out the nearest nodes names and addresses for the hash
             for (String[] node : nearestNodes) {
                 String nodeName = node[0];
@@ -273,7 +356,7 @@ public class FullNode implements FullNodeInterface {
         return distance;
     }
 
-    public List<String[]> respondToNearest(String givenHashID) throws Exception {
+    public List<String[]> getClosestNodes(String givenHashID) throws Exception {
         String closestNodeName = null;
         String closestNodeIP = null;
         String secondClosestNodeName = null;
@@ -666,6 +749,12 @@ public class FullNode implements FullNodeInterface {
             end("ECHO FAILED", selfClient);
             return false;
         }
+    }
+    public void sendNearest(String name) throws Exception {
+        String hashID = hash(name);
+        Writer writer = new OutputStreamWriter(selfClient.getOutputStream());
+        writer.write("NEAREST? " + hashID);
+        writer.flush();
     }
     public void end(String reason, Socket clientSocket) throws IOException {
         try (OutputStream outputStream = clientSocket.getOutputStream()) {
