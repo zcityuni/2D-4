@@ -231,7 +231,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
                 while ((responseLine = reader.readLine()) != null) {
-                    nearestResponse.append(responseLine).append("\n");
+                    nearestResponse.append(responseLine);
                 }
 
                 // Split the response string of nearest command
