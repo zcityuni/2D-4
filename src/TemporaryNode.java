@@ -237,7 +237,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         break;
                     }
                 }
-                String nearestResponseString = nearestResponse.toString().trim();
+                String nearestResponseString = nearestResponse.toString();
                 System.out.println(nearestResponse.toString());
                 System.out.println("Reached");
 
