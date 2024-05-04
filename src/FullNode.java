@@ -298,13 +298,14 @@ public class FullNode implements FullNodeInterface {
 
             String keyHashID = hash(key.toString());
             String myHashID = hash(selfName);
-            List<String[]> nearestNodes = getClosestNodes(keyHashID);
+            String[][] nearestNodes = getClosestNodes(keyHashID);
             int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
+
+            System.out.println("key hashid: " + keyHashID);
+            System.out.println("my hashid: " + myHashID);
             for (String[] node : nearestNodes) {
                 String nodeHashID = hash(node[0]);
-                System.out.println("key hashid: " + keyHashID);
                 System.out.println("closest nodes: " + nodeHashID);
-                System.out.println("my hashid: " + myHashID);
                 if(nodeHashID.equals(myHashID)){
                     writer.write("SUCCESS\n");
                     writer.flush();
@@ -314,7 +315,7 @@ public class FullNode implements FullNodeInterface {
                 }
                 count++;
             }
-            if(count >= nearestNodes.size()){
+            if(count >= nearestNodes.length){
                 writer.write("FAILED\n");
                 writer.flush();
             }
@@ -324,7 +325,7 @@ public class FullNode implements FullNodeInterface {
             String[] nearestResponse = request.split(" ");
             String hashID = nearestResponse[1];
             System.out.println("Nearest nodes: ");
-            List<String[]> nearestNodes = getClosestNodes(hashID);
+            String[][] nearestNodes = getClosestNodes(hashID);
             // print out the nearest nodes names and addresses for the hash
             StringBuilder message = new StringBuilder();
             int nodeCount = 0;
@@ -380,7 +381,7 @@ public class FullNode implements FullNodeInterface {
         return distance;
     }
 
-    public List<String[]> getClosestNodes(String givenHashID) throws Exception {
+    public String[][] getClosestNodes(String givenHashID) throws Exception {
         String closestNodeName = null;
         String closestNodeIP = null;
         String secondClosestNodeName = null;
@@ -424,11 +425,12 @@ public class FullNode implements FullNodeInterface {
                 }
             }
         }
-        List<String[]> closestNodes = new ArrayList<>();
-        closestNodes.add(new String[]{closestNodeName, closestNodeIP});
-        closestNodes.add(new String[]{secondClosestNodeName, secondClosestNodeIP});
-        closestNodes.add(new String[]{thirdClosestNodeName, thirdClosestNodeIP});
-        return closestNodes;
+        String[][] closestNodesArray = {
+                {closestNodeName, closestNodeIP},
+                {secondClosestNodeName, secondClosestNodeIP},
+                {thirdClosestNodeName, thirdClosestNodeIP}
+        };
+        return closestNodesArray;
     }
 
     public boolean start(String startingNodeName, String startingNodeAddress) throws IOException {
