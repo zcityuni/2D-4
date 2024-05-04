@@ -48,106 +48,277 @@ public class TemporaryNode implements TemporaryNodeInterface {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String response = reader.readLine();
             System.out.println(fullnodeName[0] + " replied: " + response); // This will print out the fullnodes start message to us
-            System.out.println("Connection established!");
-            // Send the full node our start message
-            Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("\nSending a START message to the server...\n");
-            String myNode = "addf081@city.ac.uk:TempNodeZ123";
-            writer.write("START 1 " + myNode + "\n");
-            writer.flush();
-            System.out.println("START 1 " + myNode);
-            System.out.println("====START message sent!====\n");
-            return true;
+
+            if(response.startsWith("START")){
+                System.out.println("Connection established!");
+                // Send the full node our start message
+                Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
+                System.out.println("\nSending a START message to the server...\n");
+                String myNode = "addf081@city.ac.uk:TempNodeZ123";
+                writer.write("START 1 " + myNode + "\n");
+                writer.flush();
+                System.out.println("START 1 " + myNode);
+                System.out.println("====START message sent!====\n");
+                return true;
+            } else{
+                end("Invalid connection");
+            }
         } catch (SocketException e){
             System.out.println(e.toString());
             end("START failed");
             return false;
         }
+        return false;
     }
 
     public boolean store(String key, String value) throws IOException {
 	// Implement this!
 	// Return true if the store worked
 	// Return false if the store failed
+        boolean stored = false;
         try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
-            System.out.println("\nSending a PUT? message to the server...\n");
-            int keyLength = key.length();
-            int valLength = value.length();
-            writer.write("PUT?  " + keyLength + " " + valLength + "\n");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            String[] keyLines = key.split("\\n");
+            String[] valueLines = value.split("\\n");
+            int numLinesOfKey = keyLines.length;
+            int numLinesOfValue = valueLines.length;
+
+            if (numLinesOfKey < 1 || numLinesOfValue < 1) {
+                end("PUT numLines error");
+                throw new IOException("Number of lines in key or value must be at least one");
+            }
+
+            String message = "PUT? " + numLinesOfKey + " " + numLinesOfValue + "\n";
+            for (String line : keyLines) {
+                message += line + "\n";
+            }
+            for (String line : valueLines) {
+                message += line + "\n";
+            }
+
+            System.out.println("\nSending a PUT? message to the server...\n" + message);
+            writer.write(message);
             writer.flush();
             System.out.println("====PUT message sent!=====\n");
-            return true;
-        } catch(IOException e){
+
+            // Handling the response
+            String serverResponse = reader.readLine();
+            System.out.println("Server replied: " + serverResponse);
+            if(serverResponse.startsWith("SUCCESS")){
+                return true;
+            }
+            else if(serverResponse.startsWith("FAILED")){ // Try to store in node closest to hash
+                System.out.println("\nValue could not be stored here, checking closest nodes to hashed key...");
+                String nodeHashID = hash(key);
+                writer.write("NEAREST? " + nodeHashID + "\n");
+                writer.flush();
+                System.out.println("NEAREST? " + nodeHashID + "\n");
+                System.out.println("====NEAREST message sent!====\n");
+
+                // Read the response and store it in a string
+                StringBuilder nearestResponse = new StringBuilder();
+                String responseLine;
+                while ((responseLine = reader.readLine()) != null) {
+                    nearestResponse.append(responseLine).append("\n");
+                }
+
+                // Split the response string of nearest command
+                String nearestResponseString = nearestResponse.toString();
+                String[] responseLines = nearestResponseString.split("\\r?\\n");
+
+                int nodesCount = 0; // so we know when to stop
+                String currentName = null;
+                String currentAddress = null;
+
+                // For each line in the NEAREST? response extract the names and addresses
+                for (String nearestResponseLine : responseLines) {
+                    // Skip lines that are not necessary
+                    if (nearestResponseLine.startsWith("NODES")) {
+                        nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
+                        System.out.println(nodesCount + " Full nodes found, sending each one a PUT?");
+                        continue;
+                    }
+                    if (nodesCount < 1) {
+                        break; // Break out of the loop if we have parsed and acted on all nodes
+                    }
+                    //Parse each of the names and addresses to connect to and send a PUT?
+                    if (currentName == null) {
+                        currentName = nearestResponseLine;
+                        System.out.println("Name: " + currentName);
+                    } else {
+                        currentAddress = nearestResponseLine;
+                        System.out.println("IP Address: " + currentAddress);
+                        // Send the start command to connect then send a GET?
+                        this.start(currentName, currentAddress); // Connect to the node
+                        System.out.println("\nSending a PUT? message to the server...\n" + message);
+                        writer.write(message);
+                        writer.flush();
+                        System.out.println("====PUT message sent!=====\n");
+
+                        System.out.println("Server replied: " + serverResponse);
+                        if(serverResponse.startsWith("SUCCESS")){
+                            stored = true;
+                            return true;
+                        } else if (responseLine.startsWith("FAILED")) {
+                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Value could not be stored at this node.");
+                        } else {
+                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Wrong PUT? format?");
+                        }
+                        // Reset name and IP for the next node to parse and connect to and decrement count
+                        currentName = null;
+                        currentAddress = null;
+                        nodesCount--;
+                    }
+                }
+            }
+            else{
+                System.out.println("Invalid response, check request format?");
+                end("PUT FAILED");
+            }
+        } catch (IOException e) {
             System.out.println(e.toString());
-            end("PUT failed");
+            end("PUT FAILED");
             return false;
+        } catch (Exception e) {
+            end("HASHING ID FAILED");
+            throw new RuntimeException(e);
         }
+        return false;
     }
 
     public String get(String key) throws IOException {
-        // Implement this!
-        // Return the string if the get worked
-        // Return null if it didn't
+	// Implement this!
+	// Return the string if the get worked
+	// Return null if it didn't
         boolean found = false;
-        try {
+        try{
             Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String[] keyLines = key.split("\\n");
             int numLines = keyLines.length;
 
-            if (numLines >= 1) {
-                String message = "GET? " + numLines + "\n";
-                for (String line : keyLines) {
-                    message += line + "\n";
-                }
-                System.out.println("Sending a GET? message to the server...\n" + message);
-                writer.write(message);
-                System.out.println("====GET message sent!====\n");
-                writer.flush();
-                System.out.println("\nWaiting for server response...\n");
-
-                // If the response is NOPE
-                String serverResponse = reader.readLine();
-                System.out.println("Server replied: " + serverResponse);
-                if (serverResponse.equals("NOPE")) {
-                    System.out.println("\nValue not found at this full node, asking for nearest nodes...");
-                    String nodeHashID = hash(name);
-                    writer.write("NEAREST? " + nodeHashID + "\n");
-                    writer.flush();
-                    System.out.println("NEAREST? " + nodeHashID + "\n");
-                    System.out.println("====NEAREST message sent!====\n");
-
-                    // Read the response from nearest command which should have list of nodes
-                    // store it in a string so that next GET? response can be read from reader
-                    StringBuilder nearestResponse = new StringBuilder();
-                    String responseLine;
-                    while ((responseLine = reader.readLine()) != null) {
-                        System.out.println(responseLine);
-                        nearestResponse.append(responseLine).append("\n");
-                    }
-
-                    // Process the NEAREST? response
-                    processNearestResponse(nearestResponse.toString(), writer, key, numLines);
-
-                } else if (serverResponse.startsWith("VALUE")) {
-                    found = true;
-                    System.out.println("\n Server Says:\n");
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line).append("\n");
-                    }
-                    System.out.println(response.toString());
-                    return response.toString();
-                }
-            } else { // If numLines is less than 1
+            if(numLines < 1){
                 end("GET numLines error");
                 throw new IOException("Number of lines must be at least 1");
             }
-        } catch (IOException e) {
+
+            String message = "GET? " + numLines + "\n";
+            for (String line : keyLines) {
+                message += line + "\n";
+            }
+            System.out.println("Sending a GET? message to the server...\n" + message + "test");
+            writer.write(message);
+            System.out.println("====GET message sent!====\n");
+            writer.flush();
+            System.out.println("\nWaiting for server response...\n");
+
+            // Handling the response if NOPE
+            String serverResponse = reader.readLine();
+            System.out.println("Server replied: " + serverResponse);
+            if (serverResponse.equals("NOPE")) {
+                System.out.println("\nValue not found at this full node, asking for nearest nodes...");
+                String nodeHashID = hash(name);
+                writer.write("NEAREST? " + nodeHashID + "\n");
+                writer.flush();
+                System.out.println("NEAREST? " + nodeHashID + "\n");
+                System.out.println("====NEAREST message sent!====\n");
+
+                // Read the response and store it in a string
+                StringBuilder nearestResponse = new StringBuilder();
+                String responseLine;
+                while ((responseLine = reader.readLine()) != null) {
+                    nearestResponse.append(responseLine).append("\n");
+                }
+
+                // Split the response string of nearest command
+                String nearestResponseString = nearestResponse.toString();
+                String[] responseLines = nearestResponseString.split("\\r?\\n");
+
+                int nodesCount = 0; // so we know when to stop
+                String currentName = null;
+                String currentAddress = null;
+
+                // For each line in the NEAREST? response extract the names and addresses
+                for (String nearestResponseLine : responseLines) {
+                    // Skip lines that are not necessary
+                    if (nearestResponseLine.startsWith("NODES")) {
+                        nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
+                        System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
+                        continue;
+                    }
+                    if (nearestResponseLine.startsWith(name)) {
+                        System.out.println("Skipping the same node we are connected to...");
+                        continue;
+                    }
+                    if (nearestResponseLine.startsWith(IPAddr)) {
+                        nodesCount--;
+                        System.out.println("Decreasing remaining node count to: " + nodesCount + "\n");
+                        continue;
+                    }
+
+                    if (nodesCount < 1 || found) {
+                        break; // Break out of the loop if we have parsed and acted on all nodes
+                    }
+                    //Parse each of the names and addresses to connect to and send a GET?
+                    if (currentName == null) {
+                        currentName = nearestResponseLine;
+                        System.out.println("Name: " + currentName);
+                    }
+                    else {
+                        currentAddress = nearestResponseLine;
+                        System.out.println("IP Address: " + currentAddress);
+                        // Send the start command to connect then send a GET?
+                        this.start(currentName, currentAddress); // Connect to the node
+                        System.out.println("Sending a GET? message to the server...\n" + message + "test");
+                        writer.write(message);
+                        System.out.println("====GET message sent!====\n");
+                        writer.flush();
+                        System.out.println("\nWaiting for server response...\n");
+
+                        if (responseLine.startsWith("VALUE")) { // This time we read from the main stream
+                            found = true;
+                            System.out.println("Server replied: " + responseLine);
+                            StringBuilder response = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                response.append(line).append("\n");
+                            }
+                            System.out.println(response.toString());
+                            return response.toString();
+                        }
+                        else if (responseLine.startsWith("NOPE")) {
+                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Value was not found at this node.");
+                        }
+                        else{
+                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Wrong GET? format?");
+                        }
+                        // Reset name and IP for the next node to parse and connect to and decrement count
+                        currentName = null;
+                        currentAddress = null;
+                        nodesCount--;
+                    }
+                }
+            }
+            else if(serverResponse.startsWith("VALUE")){
+                found = true;
+                System.out.println("\n Server Says:\n");
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line).append("\n");
+                }
+                System.out.println(response.toString());
+                return response.toString();
+            }
+        } catch(IOException e){
             System.out.println(e.toString());
-            end("GET failed");
+            end("GET FAILED");
             return null;
         } catch (Exception e) {
             end("HASHING ID FAILED");
@@ -155,84 +326,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
         }
         return null;
     }
-
-    private String processGetResponse(BufferedReader reader) throws IOException {
-        String responseLine;
-        while ((responseLine = reader.readLine()) != null) {
-            if (responseLine.startsWith("VALUE")) {
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line).append("\n");
-                }
-                return response.toString();
-            } else if (responseLine.startsWith("NOPE")) {
-                System.out.println("Value was not found at this node.");
-                return null;
-            } else {
-                System.out.println("Wrong GET? format?");
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private void processNearestResponse(String nearestResponse, Writer writer, String key, int numLines) throws IOException {
-        BufferedReader reader = new BufferedReader(new StringReader(nearestResponse));
-        String responseLine;
-        int nodesCount = 0;
-        String currentName = null;
-        String currentAddress = null;
-
-        while ((responseLine = reader.readLine()) != null) {
-            if (responseLine.startsWith("NODES")) {
-                nodesCount = Integer.parseInt(responseLine.split(" ")[1]);
-                System.out.println(nodesCount + " Full nodes found, sending each one a GET?");
-                continue;
-            }
-            if (responseLine.startsWith(name)) {
-                System.out.println("Skipping the same node we are connected to...");
-                continue;
-            }
-            if (responseLine.startsWith(IPAddr)) {
-                nodesCount--;
-                System.out.println("Decreasing remaining node count to: " + nodesCount + "\n");
-                continue;
-            }
-
-            if (nodesCount < 1) {
-                break; // Break out of the loop if we have parsed and acted on all nodes
-            }
-            if (currentName == null) {
-                currentName = responseLine;
-                System.out.println("Name: " + currentName);
-            } else {
-                currentAddress = responseLine;
-                System.out.println("IP Address: " + currentAddress);
-                // Send the start command to connect then send a GET?
-                this.start(currentName, currentAddress);
-                String message = "GET? " + numLines + "\n";
-                for (String line : key.split("\\n")) {
-                    message += line + "\n";
-                }
-                System.out.println("Sending a GET? message to the server...\n" + message);
-                writer.write(message);
-                System.out.println("====GET message sent!====\n");
-                writer.flush();
-                System.out.println("\nWaiting for server response...\n");
-                String response = processGetResponse(reader);
-                if (response != null) {
-                    System.out.println("Server replied:\n" + response);
-                    return;
-                }
-                // Reset name and IP for the next node to parse and connect to and decrement count
-                currentName = null;
-                currentAddress = null;
-                nodesCount--;
-            }
-        }
-    }
-
 
     public String hash(String nodeName) throws Exception {
         byte[] hashBytes = HashID.computeHashID(nodeName + "\n");
@@ -256,7 +349,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
             return true;
         } catch(IOException e){
             System.out.println(e.toString());
-            end("ECHO failed");
+            end("ECHO FAILED");
             return false;
         }
     }
