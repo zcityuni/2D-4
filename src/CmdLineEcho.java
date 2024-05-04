@@ -12,17 +12,14 @@ import java.net.UnknownHostException;
 public class CmdLineEcho {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 4) {
+        if (args.length != 2) {
             System.err.println("Usage error!");
-            System.err.println("DSTStoreCmdLine startingNodeName startingNodeAddress key value");
+            System.err.println("DSTStoreCmdLine startingNodeName startingNodeAddress");
             return;
         } else {
             // A full node that is running on the network to be a first point of contact
             String startingNodeName = args[0];
             String startingNodeAddress = args[1];
-
-            String key = args[2] + '\n';   // All keys have a new line at the end
-            String value = args[3] + '\n'; // All values have a new line at the end
 
             // Use a TemporaryNode to store the (key, value) pair on the network
             TemporaryNode tn = new TemporaryNode();
@@ -32,9 +29,9 @@ public class CmdLineEcho {
 
                 // Store the (key, value) pair
                 if (tn.echo()) {
-                    System.out.println("Store worked! :-)");
+                    System.out.println("Echo worked! :-)");
                 } else {
-                    System.out.println("Store failed! :-(");
+                    System.out.println("Echo failed! :-(");
                 }
 
             } else {
