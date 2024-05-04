@@ -230,17 +230,18 @@ public class TemporaryNode implements TemporaryNodeInterface {
                 // Read the response and store it in a string
                 StringBuilder nearestResponse = new StringBuilder();
                 String responseLine;
-                while ((responseLine = reader.readLine()) != null) {
+                for (int i = 0; i < 7; i++){
+                    responseLine = reader.readLine();
                     nearestResponse.append(responseLine);
                     if(responseLine.isBlank()){
                         break;
                     }
                 }
+                String nearestResponseString = nearestResponse.toString().trim();
                 System.out.println(nearestResponse.toString());
                 System.out.println("Reached");
 
                 // Split the response string of nearest command
-                String nearestResponseString = nearestResponse.toString();
                 String[] responseLines = nearestResponseString.split("\\n");
                 int nodesCount = 0; // so we know when to stop
                 String currentName = null;
