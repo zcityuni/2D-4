@@ -100,7 +100,7 @@ public class FullNode implements FullNodeInterface {
     }
 
     public void handleIncomingConnections(String startingNodeName, String startingNodeAddress) throws IOException {
-        // connect to the network and notify
+        // connect to the network and notify (Active mapping)
         // these are the details of the node we are connecting to
         name = startingNodeName;
         String[] fullnodeName = startingNodeName.split(":");
@@ -132,12 +132,13 @@ public class FullNode implements FullNodeInterface {
                 end("Invalid connection", selfClient);
             }
 
-            writer.write("NOTIFY? \n");
-            writer.write(selfName + " \n");
-            writer.write(selfAddress + "\n");
+            System.out.println("Sending a NOTIFY? message to add myself to the network map...");
+            String notifyMessage = "NOTIFY? \n" + selfName + "\n" + selfAddress + "\n";
+            writer.write(notifyMessage);
+            writer.flush();
             System.out.println("Server replied: " + response);
 
-            System.out.println("Sending a nearest request to actively map nodes...\n");
+            System.out.println("Sending a nearest request to actively map nearby nodes...\n");
             String nodeHashID = hash(selfName);
             writer.write("NEAREST? " + nodeHashID + "\n");
             writer.flush();
@@ -167,21 +168,24 @@ public class FullNode implements FullNodeInterface {
             for (String nearestResponseLine : responseLines) {
                 if (nearestResponseLine.startsWith("NODES")) {
                     nodesCount = Integer.parseInt(nearestResponseLine.split(" ")[1]);
-                    System.out.println(nodesCount + " Full nodes found, sending each one a PUT?");
+                    System.out.println(nodesCount + " Full nodes found, sending each one a NOTIFY?");
                     continue;
                 }
                 if (nodesCount < 1) {
                     break; // break out of the loop if we have parsed and acted on all nodes
                 }
-                // parse each of the names and addresses to connect to and send a PUT?
+                // parse each of the names and addresses to connect to and send a NOTIFY?
                 if (currentName == null) {
                     currentName = nearestResponseLine;
                     System.out.println("Name: " + currentName);
                 } else {
                     currentAddress = nearestResponseLine;
                     System.out.println("IP Address: " + currentAddress);
-                    // send the start command to connect then send a GET?
-                    //this.start(currentName, currentAddress); // connect to the node
+                    this.start(currentName, currentAddress); // connect to the node and send NOTIFY?
+                    System.out.println("Sending a NOTIFY? message to add myself to the network map...");
+                    writer.write(notifyMessage);
+                    writer.flush();
+                    System.out.println("Server replied: " + response);
                     // reset name and IP for the next node to parse and connect to and decrement count
                     currentName = null;
                     currentAddress = null;
