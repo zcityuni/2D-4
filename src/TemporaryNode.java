@@ -284,9 +284,9 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         writer.flush();
                         System.out.println("\nWaiting for server response...\n");
 
-                        if (responseLine.startsWith("VALUE")) { // This time we read from the main stream
+                        if (serverResponse.startsWith("VALUE")) { // This time we read from the main stream
                             found = true;
-                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Server replied: " + serverResponse);
                             StringBuilder response = new StringBuilder();
                             String line;
                             while ((line = reader.readLine()) != null) {
@@ -295,12 +295,12 @@ public class TemporaryNode implements TemporaryNodeInterface {
                             System.out.println(response.toString());
                             return response.toString();
                         }
-                        else if (responseLine.startsWith("NOPE")) {
-                            System.out.println("Server replied: " + responseLine);
+                        else if (serverResponse.startsWith("NOPE")) {
+                            System.out.println("Server replied: " + serverResponse);
                             System.out.println("Value was not found at this node.");
                         }
                         else{
-                            System.out.println("Server replied: " + responseLine);
+                            System.out.println("Server replied: " + serverResponse);
                             System.out.println("Wrong GET? format?");
                         }
                         // Reset name and IP for the next node to parse and connect to and decrement count
