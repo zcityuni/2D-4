@@ -303,7 +303,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                                     break;
                                 }
                             }
-                            System.out.println(valueResponse.toString());
+                            //System.out.println(valueResponse.toString());
                             return valueResponse.toString();
                         }
                         else if (serverResponse.startsWith("NOPE")) {
@@ -323,7 +323,6 @@ public class TemporaryNode implements TemporaryNodeInterface {
             }
             else if(serverResponse.startsWith("VALUE")){
                 found = true;
-                System.out.println("Server replied: " + serverResponse);
                 String[] extractLineAmount = serverResponse.split(" ");
                 int lineAmount = Integer.parseInt(extractLineAmount[1]);
                 StringBuilder valueResponse = new StringBuilder();
@@ -335,7 +334,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
                         break;
                     }
                 }
-                System.out.println(valueResponse.toString());
+                //System.out.println(valueResponse.toString());
                 return valueResponse.toString();
             }
         } catch(IOException e){
