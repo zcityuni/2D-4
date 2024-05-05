@@ -214,6 +214,8 @@ public class FullNode implements FullNodeInterface {
                     }
                     else{
                         System.out.println("More than 3 nodes at this distance already");
+                        value.remove(2);
+                        networkMap.put(distance, List.of(new String[][] {new String[] {nameToSave, IPAddrToSave}}));
                     }
                     // reset name and IP for the next node to parse and connect to and decrement count
                     currentName = null;
