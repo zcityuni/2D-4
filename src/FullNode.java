@@ -274,7 +274,8 @@ public class FullNode implements FullNodeInterface {
                 System.out.println("Sent back found value");
             }
 
-            if(reader.readLine().startsWith("NEAREST")){
+            String extraResponse = reader.readLine();
+            if(extraResponse.startsWith("NEAREST")){
                 // respond with 3 closest nodes to tha requesters provided hashID
                 String[] nearestResponse = request.split(" ");
                 String hashID = nearestResponse[1];
@@ -348,7 +349,8 @@ public class FullNode implements FullNodeInterface {
                 writer.flush();
             }
 
-            if(reader.readLine().startsWith("NEAREST")){
+            String extraResponse = reader.readLine();
+            if(extraResponse.startsWith("NEAREST")){
                 // respond with 3 closest nodes to tha requesters provided hashID
                 String[] nearestResponse = request.split(" ");
                 String hashID = nearestResponse[1];
