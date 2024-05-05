@@ -271,6 +271,7 @@ public class FullNode implements FullNodeInterface {
                     writer.flush();
                     System.out.println("Sent back found value");
                 }
+
                 /*String extraResponse = reader.readLine();
                 if(extraResponse.startsWith("NEAREST")){
                     // respond with 3 closest nodes to tha requesters provided hashID
