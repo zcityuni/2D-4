@@ -69,7 +69,9 @@ public class FullNode implements FullNodeInterface {
                                 String response = reader.readLine();
                                 if(response.startsWith("START")){
                                     System.out.println("Connection established!");
-                                    processClientRequests(connectedClient);
+                                    while(true){
+                                        processClientRequests(connectedClient);
+                                    }
                                 } else{
                                     end("Invalid connection", connectedClient);
                                 }
