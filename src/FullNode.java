@@ -69,9 +69,7 @@ public class FullNode implements FullNodeInterface {
                                 String response = reader.readLine();
                                 if(response.startsWith("START")){
                                     System.out.println("Connection established!");
-                                    while(true){
-                                        processClientRequests(connectedClient);
-                                    }
+                                    processClientRequests(connectedClient);
                                 } else{
                                     end("Invalid connection", connectedClient);
                                 }
@@ -275,6 +273,32 @@ public class FullNode implements FullNodeInterface {
                 writer.flush();
                 System.out.println("Sent back found value");
             }
+
+            if(reader.readLine().startsWith("NEAREST")){
+                // respond with 3 closest nodes to tha requesters provided hashID
+                String[] nearestResponse = request.split(" ");
+                String hashID = nearestResponse[1];
+                System.out.println("Nearest nodes: ");
+                String[][] nodes = getClosestNodes(hashID);
+                // print out the nearest nodes names and addresses for the hash
+                StringBuilder message = new StringBuilder();
+                int nodeCount = 0;
+                for (String[] node : nearestNodes) {
+                    String nodeName = node[0];
+                    String nodeAddress = node[1];
+                    if(nodeName == null || nodeAddress == null){
+                        continue;
+                    } else{
+                        message.append(nodeName).append("\n").append(nodeAddress).append("\n");
+                        nodeCount++;
+                    }
+                }
+                // write it to the writer
+                writer.write("NODES " + nodeCount + "\n" + message.toString());
+                writer.flush();
+                System.out.println(message);
+                System.out.println("Sent nearest nodes");
+            }
         }
         else if(request.startsWith("PUT?")){
             // handle a PUT? request by seeing if we are close enough to keys hashID store it
@@ -308,6 +332,7 @@ public class FullNode implements FullNodeInterface {
             for (String[] node : nearestNodes) {
                 String nodeName = node[0];
                 String nodeHashID = hash(nodeName);
+                System.out.println("current node hash id, checking if equal " + nodeHashID);
                 if(nodeHashID.equals(myHashID)){
                     writer.write("SUCCESS\n");
                     writer.flush();
@@ -321,6 +346,32 @@ public class FullNode implements FullNodeInterface {
             if(count >= nearestNodes.length){
                 writer.write("FAILED\n");
                 writer.flush();
+            }
+
+            if(reader.readLine().startsWith("NEAREST")){
+                // respond with 3 closest nodes to tha requesters provided hashID
+                String[] nearestResponse = request.split(" ");
+                String hashID = nearestResponse[1];
+                System.out.println("Nearest nodes: ");
+                String[][] nodes = getClosestNodes(hashID);
+                // print out the nearest nodes names and addresses for the hash
+                StringBuilder message = new StringBuilder();
+                int nodeCount = 0;
+                for (String[] node : nearestNodes) {
+                    String nodeName = node[0];
+                    String nodeAddress = node[1];
+                    if(nodeName == null || nodeAddress == null){
+                        continue;
+                    } else{
+                        message.append(nodeName).append("\n").append(nodeAddress).append("\n");
+                        nodeCount++;
+                    }
+                }
+                // write it to the writer
+                writer.write("NODES " + nodeCount + "\n" + message.toString());
+                writer.flush();
+                System.out.println(message);
+                System.out.println("Sent nearest nodes");
             }
         }
         else if(request.startsWith("NEAREST?")){
