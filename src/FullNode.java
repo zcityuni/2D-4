@@ -390,6 +390,7 @@ public class FullNode implements FullNodeInterface {
                 System.out.println("Nearest nodes: ");
                 String[][] nearestNodes = getClosestNodes(hashID);
                 // print out the nearest nodes names and addresses for the hash
+                System.out.println("nearnodes " + Arrays.deepToString(nearestNodes));
                 StringBuilder message = new StringBuilder();
                 int nodeCount = 0;
                 for (String[] node : nearestNodes) {
