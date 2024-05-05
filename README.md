@@ -3,7 +3,7 @@
 2) Navigate to the src folder in the terminal
 3) Input `javac [CmdLine Class to build].java` to build the class. For example, for `CmdLineGet` type `javac CmdLineGet.java` in the terminal.
 4) Run the project from the terminal using the `java` command, be sure to use the correct amount of arguments. I have added two extra testing CmdLine classes for testing `ECHO?` and `NEAREST?`, these both take 2 arguments, being the starting node name and IP address respectively.
-5) This flow of this project can be easily followed via the terminal which will have many print statements output to it along the way, alternatively, use wireshark for packet capture
+5) This flow of this project can be easily followed via the terminal which will have many print statements output to it along the way, alternatively, use wireshark for packet capture - There are wireshark packet recording files for various tested sitatuons included in this repo.
 6) The only changes made to the DO NOT EDIT were exception signatures required by some methods, nothing material.
 
 ## Things that work:
