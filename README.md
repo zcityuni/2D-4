@@ -1,77 +1,24 @@
-1. Test Networks
+## How to build this project
+1) Unzip the project
+2) Navigate to the src folder in the terminal
+3) Input `javac [CmdLine Class to build].java` to build the class. For example, for `CmdLineGet` type `javac CmdLineGet.java` in the terminal.
+4) Run the project from the terminal using the `java` command, be sure to use the correct amount of arguments. I have added two extra testing CmdLine classes for testing `ECHO?` and `NEAREST?`, these both take 2 arguments, being the starting node name and IP address respectively.
+5) This flow of this project can be easily followed via the terminal which will have many print statements output to it along the way, alternatively, use wireshark for packet capture
+6) The only changes made to the DO NOT EDIT were exception signatures required by some methods, nothing material.
 
-Both test networks are up and running!  For various reasons outside of
-my control both of the machines that are running them are somewhat
-fragile so please be aware that there might be some downtime over the
-next little while.  I will do everything I can to keep them running as
-smoothly as possible.
+## Things that work:
+### TempNode
+1) `START`, the TempNode is able to connect to a starting node on the network and exchange the `START` method with the starting node and it is with validation such that it will disconnect if the exchange is not completed.
+2) `ECHO?`, the TempNode can send `ECHO?` requests to servers to check for connectivity.
+3) `NEAREST?` the TempNode can retrieve the three nearest nodes for a given hashID.
+2) `PUT?` the TempNode can store key-value pairs of plaintext at full nodes that it connects to, if a `PUT?` request fails, it will automatically ask for `NEAREST?` nodes to connect to and attempt to `PUT?` the information in the three nearest nodes.
+3) `GET?` the TempNode can retrieve values stored in full nodes when it provides a key, if a `GET?` request fails, it will automatically ask for `NEAREST?` nodes to connect to and attempt to `GET?` the information from the three nearest nodes.
 
-One test network is on the Azure virtual lab.  It has 11 nodes with
-the following names / addresses:
-
-martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000
-10.0.0.164 20000
-
-martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20001
-10.0.0.164 20001
-
-martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20002
-10.0.0.164 20002
-
-and so on.  If you are using your lab machine and have your code
-compiled and working then you should be able to use the command line
-programs to do some system-level testing.
-
-To test the temporary node you can run:
-
-java CmdLineGet martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000 10.0.0.164:20000 test/jabberwocky/1
-
-this should get you the first verse of a poem.  If you change the key
-to test/jabberwocky/2 and so on then you should get the whole poem.
-This should work regardless which of the nodes you use as the first
-node.
-
-You can also run:
-
-java CmdLineStore martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000 10.0.0.164:20000 YOUR_EMAIL_ADDRESS Working
-java CmdLineGet martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000 10.0.0.164:20000 YOUR_EMAIL_ADDRESS
-
-( with your e-mail address replacing the string YOUR_EMAIL_ADDRESS
-obviously! ) which will test storing as well and let anyone else who
-looks know that you are doing well on the coursework.  Again, this
-should work starting with any node.
-
-Finally, when you have the full node working you could run:
-
-java CmdLineFullNode martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000 10.0.0.164:20000 YOUR_LAB_MACHINE_IP 20000
-
-and your program will be included in the network of full nodes.  (
-Again, you will need to put the IP address of your lab machine instead
-of YOUR_LAB_MACHINE_IP .  Remember Practical 4?)
-
-
-
-The other test network is running on 2dh4.city.ac.uk .  To access this
-you must be inside the City network, which includes:
-
-* The computers in the labs.
-* The City virtual desktop machines ( https://studenthub.city.ac.uk/information-technology/city-virtual-desktop )
-* Computers connected to the new City VPN ( https://cityuni.service-now.com/sp?id=kb_article_view&sys_kb_id=c1ac71ba1b3c82104e86b886d34bcbdf please note this is managed by IT; you will have to ask them if you need support )
-
-I believe the firewalling issues have been resolved but it is possible
-there may still be some restrictions.  Let me know if there are issues.
-
-Again there are 11 nodes and the names are the same but the IP addresses are different:
-
-martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20000
-10.200.51.65 20000
-
-martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20001
-10.200.51.65 20001
-
-martin.brain@city.ac.uk:martins-implementation-1.0,fullNode-20002
-10.200.51.65 20002
-
-All of the same tests should work.
-
-https://pastebin.com/q58kMF7e
+### FullNode
+The FullNode can do everything a TempNode (client) can do but also
+1) Listen for connections, the FullNode opens a `ServerSocket` on a given port and waits for connections, upon accepting a client over TCP, the FullNode will initiate the 2D#4 protocol with the `START` request to the connected node, it will then await a `START` response, upon which it will create a new Thread to handle the conversation with the node. Thus, it is able to handle multiple clients as a server.
+2) Passive and Active network mapping: the FullNode can passively map by listening for `NOTIFY?` requests and handling it by adding the node details to its network map with its calculated hashID distance. The FullNode upon connecting to a starting node as a client, after engaging in the `START` procedure, will automatically begin to query the node's `NEAREST?` nodes and connect to and then `NOTIFY?` each node to be added to their network maps. 
+3) Handle `ECHO?` requests, the FullNode wil respond with `OHCE` as described by the RFC.
+4) Handle `NEAREST?` requests, the FullNode will return three closest nodes to a given hashID as described by RFC.
+5) Handle `GET?` requests, the FullNode will return values for any given keys stored in its hashmap.
+6) Handle `PUT?` requests (partial), the FullNode can handle `PUT?` requests by storing key-value pairs in its hashmap provided the FullNode is one of the closest nodes to the given hashID of the key. (There is a nullptr error here for some reason when attempting to check if its closest).

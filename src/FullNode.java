@@ -38,6 +38,7 @@ public class FullNode implements FullNodeInterface {
         networkMap = new HashMap<>();
         valueMap = new HashMap<>();
         selfName = "addf081@city.ac.uk:FullNodeZ123";
+        valueMap.put("Welcome\n", "Hello World\n");
     }
     public boolean listen(String ipAddress, int portNumber) throws IOException {
         // this is to open a server to listen for connections from other nodes
