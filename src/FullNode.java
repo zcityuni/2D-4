@@ -208,7 +208,13 @@ public class FullNode implements FullNodeInterface {
                     String hashID = hash(nameToSave);
                     int distance = calculateHashIDDistance(hash(selfName), hashID);
                     // store in our map at that distance
-                    networkMap.put(distance, List.of(new String[][] {new String[] {nameToSave, IPAddrToSave}}));
+                    List<String[]> value = networkMap.get(distance);
+                    if(value.size() < 4){
+                        networkMap.put(distance, List.of(new String[][] {new String[] {nameToSave, IPAddrToSave}}));
+                    }
+                    else{
+                        System.out.println("More than 3 nodes at this distance already");
+                    }
                     // reset name and IP for the next node to parse and connect to and decrement count
                     currentName = null;
                     currentAddress = null;
