@@ -379,7 +379,7 @@ public class TemporaryNode implements TemporaryNodeInterface {
         String hashID = hash(name);
         Writer writer = new OutputStreamWriter(clientSocket.getOutputStream());
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        writer.write("NEAREST? " + hashID);
+        writer.write("NEAREST? " + hashID + "\n");
         writer.flush();
 
         // read the response and store it in a string
