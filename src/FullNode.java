@@ -235,159 +235,57 @@ public class FullNode implements FullNodeInterface {
         // handle the requests sent from other nodes here
         BufferedReader reader = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
         Writer writer = new OutputStreamWriter(connectedClient.getOutputStream());
-        String request;
-        while((request = reader.readLine()) != null){
-            System.out.println("Server request: " + request);
-            if(request.startsWith("ECHO?")){
-                writer.write("OHCE\n");
+        String request = reader.readLine();
+
+        System.out.println("Server request: " + request);
+        if(request.startsWith("ECHO?")){
+            writer.write("OHCE\n");
+            writer.flush();
+            System.out.println("Echoed back!");
+        }
+        else if(request.startsWith("GET?")){
+            // handle a GET? request by looking up the key in our table
+            if(valueMap.size() < 1){
+                writer.write("NOPE\n");
                 writer.flush();
-                System.out.println("Echoed back!");
             }
-            else if(request.startsWith("GET?")){
-                // handle a GET? request by looking up the key in our table
-                if(valueMap.size() < 1){
-                    writer.write("NOPE\n");
-                    writer.flush();
-                }
 
-                String[] getResponse = request.split("\\n");
-                String firstLine = getResponse[0];
-                String[] splitFirstLine = firstLine.split(" ");
-                int keyLength = Integer.parseInt(splitFirstLine[1]);
+            String[] getResponse = request.split("\\n");
+            String firstLine = getResponse[0];
+            String[] splitFirstLine = firstLine.split(" ");
+            int keyLength = Integer.parseInt(splitFirstLine[1]);
 
-                StringBuilder key = new StringBuilder();
-                String keyResponseLine;
-                for (int i = 0; i < keyLength; i++){
-                    keyResponseLine = reader.readLine();
-                    key.append(keyResponseLine).append("\n");
-                }
-
-                String value = valueMap.get(key.toString());
-                if(value == null){
-                    writer.write("NOPE\n");
-                    writer.flush();
-                }
-                else{
-                    String[] splitValue = value.split("\\n");
-                    int valueLength = splitValue.length;
-
-                    StringBuilder message = new StringBuilder();
-                    message.append("VALUE ").append(keyLength).append(" ").append(valueLength).append("\n");
-                    writer.write(message.toString());
-                    writer.flush();
-                    System.out.println("Sent back found value");
-                }
-
-                /*String extraResponse = reader.readLine();
-                if(extraResponse.startsWith("NEAREST")){
-                    // respond with 3 closest nodes to tha requesters provided hashID
-                    String[] nearestResponse = request.split(" ");
-                    String hashID = nearestResponse[1];
-                    System.out.println("Nearest nodes: ");
-                    String[][] nodes = getClosestNodes(hashID);
-                    // print out the nearest nodes names and addresses for the hash
-                    StringBuilder message = new StringBuilder();
-                    int nodeCount = 0;
-                    for (String[] node : nearestNodes) {
-                        String nodeName = node[0];
-                        String nodeAddress = node[1];
-                        if(nodeName == null || nodeAddress == null){
-                            continue;
-                        } else{
-                            message.append(nodeName).append("\n").append(nodeAddress).append("\n");
-                            nodeCount++;
-                        }
-                    }
-                    // write it to the writer
-                    writer.write("NODES " + nodeCount + "\n" + message.toString());
-                    writer.flush();
-                    System.out.println(message);
-                    System.out.println("Sent nearest nodes");
-                }*/
+            StringBuilder key = new StringBuilder();
+            String keyResponseLine;
+            for (int i = 0; i < keyLength; i++){
+                keyResponseLine = reader.readLine();
+                key.append(keyResponseLine).append("\n");
             }
-            else if(request.startsWith("PUT?")){
-                // handle a PUT? request by seeing if we are close enough to keys hashID store it
-                String[] putResponse = request.split("\\n");
-                String firstLine = putResponse[0];
-                String[] splitFirstLine = firstLine.split(" ");
-                int keyLength = Integer.parseInt(splitFirstLine[1]);
-                int valueLength = Integer.parseInt(splitFirstLine[2]);
 
-                StringBuilder key = new StringBuilder();
-                String keyResponseLine;
-                for (int i = 0; i < keyLength; i++){
-                    keyResponseLine = reader.readLine();
-                    key.append(keyResponseLine).append("\n");
-                }
-
-                StringBuilder value = new StringBuilder();
-                String valueResponseLine;
-                for (int i = 0; i < valueLength; i++){
-                    valueResponseLine = reader.readLine();
-                    value.append(valueResponseLine).append("\n");
-                }
-
-                String keyHashID = hash(key.toString());
-                String myHashID = hash(selfName);
-                String[][] nearestNodes = getClosestNodes(keyHashID);
-                System.out.println(Arrays.deepToString(nearestNodes));
-                int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
-
-                System.out.println("key hashid: " + keyHashID);
-                System.out.println("my hashid: " + myHashID);
-                for (String[] node : nearestNodes) {
-                    String nodeName = node[0];
-                    String nodeHashID = hash(nodeName);
-                    System.out.println("current node hash id, checking if equal " + nodeHashID);
-                    if(nodeHashID.equals(myHashID)){
-                        writer.write("SUCCESS\n");
-                        writer.flush();
-                        valueMap.put(key.toString(), value.toString());
-                        System.out.println("Stored item in value hashmap\n");
-                        break;
-                    }
-                    count++;
-                }
-
-                if(count >= nearestNodes.length){
-                    writer.write("FAILED\n");
-                    writer.flush();
-                }
-
-                //BufferedReader anotherResponse = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
-                /*String extraResponse = reader.readLine();
-                if(extraResponse.startsWith("NEAREST")){
-                    // respond with 3 closest nodes to tha requesters provided hashID
-                    String[] nearestResponse = request.split(" ");
-                    String hashID = nearestResponse[1];
-                    System.out.println("Nearest nodes: ");
-                    String[][] nodes = getClosestNodes(hashID);
-                    // print out the nearest nodes names and addresses for the hash
-                    StringBuilder message = new StringBuilder();
-                    int nodeCount = 0;
-                    for (String[] node : nearestNodes) {
-                        String nodeName = node[0];
-                        String nodeAddress = node[1];
-                        if(nodeName == null || nodeAddress == null){
-                            continue;
-                        } else{
-                            message.append(nodeName).append("\n").append(nodeAddress).append("\n");
-                            nodeCount++;
-                        }
-                    }
-                    // write it to the writer
-                    writer.write("NODES " + nodeCount + "\n" + message.toString());
-                    writer.flush();
-                    System.out.println(message);
-                    System.out.println("Sent nearest nodes");
-                }*/
+            String value = valueMap.get(key.toString());
+            if(value == null){
+                writer.write("NOPE\n");
+                writer.flush();
             }
-            else if(request.startsWith("NEAREST?")){
+            else{
+                String[] splitValue = value.split("\\n");
+                int valueLength = splitValue.length;
+
+                StringBuilder message = new StringBuilder();
+                message.append("VALUE ").append(keyLength).append(" ").append(valueLength).append("\n");
+                writer.write(message.toString());
+                writer.flush();
+                System.out.println("Sent back found value");
+            }
+
+            BufferedReader anotherResponse = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
+            String extraResponse = anotherResponse.readLine();
+            if(extraResponse.startsWith("NEAREST")){
                 // respond with 3 closest nodes to tha requesters provided hashID
                 String[] nearestResponse = request.split(" ");
                 String hashID = nearestResponse[1];
                 System.out.println("Nearest nodes: ");
-                String[][] nearestNodes = getClosestNodes(hashID);
+                String[][] nodes = getClosestNodes(hashID);
                 // print out the nearest nodes names and addresses for the hash
                 StringBuilder message = new StringBuilder();
                 int nodeCount = 0;
@@ -407,30 +305,131 @@ public class FullNode implements FullNodeInterface {
                 System.out.println(message);
                 System.out.println("Sent nearest nodes");
             }
-            else if(request.startsWith("NOTIFY?")){
-                // record the name given in our network map and respond with notified if appropriate (passive mapping)
-                String[] notifyResponse = request.split("\\n");
-                String name = notifyResponse[1];
-                String IPAddr = notifyResponse[2];
-                String hashID = hash(notifyResponse[1]);
-                // get distance by comparing hashID of our name to hashID of their name
-                int distance = calculateHashIDDistance(hash(selfName), hashID);
-                // store in our map at that distance
-                networkMap.put(distance, List.of(new String[][] {new String[] {name, IPAddr}}));
-                writer.write("NOTIFIED\n");
+        }
+        else if(request.startsWith("PUT?")){
+            // handle a PUT? request by seeing if we are close enough to keys hashID store it
+            String[] putResponse = request.split("\\n");
+            String firstLine = putResponse[0];
+            String[] splitFirstLine = firstLine.split(" ");
+            int keyLength = Integer.parseInt(splitFirstLine[1]);
+            int valueLength = Integer.parseInt(splitFirstLine[2]);
+
+            StringBuilder key = new StringBuilder();
+            String keyResponseLine;
+            for (int i = 0; i < keyLength; i++){
+                keyResponseLine = reader.readLine();
+                key.append(keyResponseLine).append("\n");
+            }
+
+            StringBuilder value = new StringBuilder();
+            String valueResponseLine;
+            for (int i = 0; i < valueLength; i++){
+                valueResponseLine = reader.readLine();
+                value.append(valueResponseLine).append("\n");
+            }
+
+            String keyHashID = hash(key.toString());
+            String myHashID = hash(selfName);
+            String[][] nearestNodes = getClosestNodes(keyHashID);
+            System.out.println(Arrays.deepToString(nearestNodes));
+            int count = 0; // if all nodes are checked and the for exits without breaking then none of the hashes match
+
+            System.out.println("key hashid: " + keyHashID);
+            System.out.println("my hashid: " + myHashID);
+            for (String[] node : nearestNodes) {
+                String nodeName = node[0];
+                String nodeHashID = hash(nodeName);
+                System.out.println("current node hash id, checking if equal " + nodeHashID);
+                if(nodeHashID.equals(myHashID)){
+                    writer.write("SUCCESS\n");
+                    writer.flush();
+                    valueMap.put(key.toString(), value.toString());
+                    System.out.println("Stored item in value hashmap\n");
+                    break;
+                }
+                count++;
+            }
+
+            if(count >= nearestNodes.length){
+                writer.write("FAILED\n");
                 writer.flush();
-                System.out.println("Notified node and stored details");
             }
-            else if(request.startsWith("END")){
-                end("Client ended the communication", connectedClient);
-                System.out.println("Client ended the communication");
-            }
-            else{
-                end("Invalid command", connectedClient);
-                System.out.println("Client sent an invalid command, communication has been closed.");
+
+            BufferedReader anotherResponse = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
+            String extraResponse = anotherResponse.readLine();
+            if(extraResponse.startsWith("NEAREST")){
+                // respond with 3 closest nodes to tha requesters provided hashID
+                String[] nearestResponse = request.split(" ");
+                String hashID = nearestResponse[1];
+                System.out.println("Nearest nodes: ");
+                String[][] nodes = getClosestNodes(hashID);
+                // print out the nearest nodes names and addresses for the hash
+                StringBuilder message = new StringBuilder();
+                int nodeCount = 0;
+                for (String[] node : nearestNodes) {
+                    String nodeName = node[0];
+                    String nodeAddress = node[1];
+                    if(nodeName == null || nodeAddress == null){
+                        continue;
+                    } else{
+                        message.append(nodeName).append("\n").append(nodeAddress).append("\n");
+                        nodeCount++;
+                    }
+                }
+                // write it to the writer
+                writer.write("NODES " + nodeCount + "\n" + message.toString());
+                writer.flush();
+                System.out.println(message);
+                System.out.println("Sent nearest nodes");
             }
         }
-
+        else if(request.startsWith("NEAREST?")){
+            // respond with 3 closest nodes to tha requesters provided hashID
+            String[] nearestResponse = request.split(" ");
+            String hashID = nearestResponse[1];
+            System.out.println("Nearest nodes: ");
+            String[][] nearestNodes = getClosestNodes(hashID);
+            // print out the nearest nodes names and addresses for the hash
+            StringBuilder message = new StringBuilder();
+            int nodeCount = 0;
+            for (String[] node : nearestNodes) {
+                String nodeName = node[0];
+                String nodeAddress = node[1];
+                if(nodeName == null || nodeAddress == null){
+                    continue;
+                } else{
+                    message.append(nodeName).append("\n").append(nodeAddress).append("\n");
+                    nodeCount++;
+                }
+            }
+            // write it to the writer
+            writer.write("NODES " + nodeCount + "\n" + message.toString());
+            writer.flush();
+            System.out.println(message);
+            System.out.println("Sent nearest nodes");
+        }
+        else if(request.startsWith("NOTIFY?")){
+            // record the name given in our network map and respond with notified if appropriate (passive mapping)
+            String[] notifyResponse = request.split("\\n");
+            String name = notifyResponse[1];
+            String IPAddr = notifyResponse[2];
+            String hashID = hash(notifyResponse[1]);
+            // get distance by comparing hashID of our name to hashID of their name
+            int distance = calculateHashIDDistance(hash(selfName), hashID);
+            // store in our map at that distance
+            networkMap.put(distance, List.of(new String[][] {new String[] {name, IPAddr}}));
+            writer.write("NOTIFIED\n");
+            writer.flush();
+            System.out.println("Notified node and stored details");
+        }
+        else if(request.startsWith("END")){
+            end("Client ended the communication", connectedClient);
+            System.out.println("Client ended the communication");
+        }
+        else{
+            end("Invalid command", connectedClient);
+            System.out.println("Client sent an invalid command, communication has been closed.");
+        }
     }
 
     public int calculateHashIDDistance(String hashID1, String hashID2) {
